@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LS25 – Wasserbüffel-Hofmanager V22</title>
+<style>
+:root{
+ --bg:#171d19;--surface:#222b24;--surface-2:#29352b;--line:#3b493d;
+ --ink:#f1f4ec;--muted:#b4c0b1;--green:#78b83f;--green-dark:#416d2c;
+ --yellow:#e3bd43;--red:#d66a5e;--navy:#243b2b;--blue:#a9c78d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{
+ background:linear-gradient(115deg,#18231b 0%,#2c492b 58%,#4d702f 100%);
+ color:#fff;padding:25px max(18px,calc((100vw - 1240px)/2));
+ border-bottom:4px solid var(--yellow);position:relative;overflow:hidden
+}
+header:after{content:"";position:absolute;right:4%;top:-80px;width:260px;height:260px;border:28px solid #ffffff12;border-radius:50%;pointer-events:none}
+header h1{margin:0 0 5px;font-size:clamp(23px,4vw,34px);letter-spacing:.2px}
+header p{margin:0;color:#e0ead9;font-size:14px}
+main{max-width:1240px;margin:22px auto;padding:0 18px 50px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:0;z-index:5;padding:9px 0;background:linear-gradient(var(--bg) 80%,transparent)}
+nav button,.btn{border:1px solid var(--line);border-radius:9px;padding:10px 14px;background:#29342b;color:var(--ink);font-weight:700;cursor:pointer;transition:.15s ease}
+nav button:hover,.btn:hover{border-color:var(--green);filter:brightness(1.12)}
+nav button.active,.btn.primary{background:var(--green);color:#14200f;border-color:var(--green)}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+nav button{min-height:44px}
+.panel{display:none}.panel.active{display:block;animation:fadein .18s ease}
+@keyframes fadein{from{opacity:.7;transform:translateY(3px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:0 5px 18px #0003;min-width:0}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
+h2{font-size:19px;margin:0 0 13px;color:#c8e3ad;display:flex;align-items:center;gap:8px}
+h2:before{content:"";display:inline-block;width:4px;height:19px;background:var(--yellow);border-radius:3px}
+h3{font-size:15px;margin:0 0 9px;color:#d6e7c8}
+p{margin:9px 0}
+label{display:block;font-size:13px;font-weight:700;color:#d1ddcc;margin:0 0 5px}
+input,select{width:100%;border:1px solid #536451;border-radius:8px;padding:10px;background:#151d17;color:var(--ink);font:inherit}
+input:focus,select:focus{outline:2px solid #8fc65b;border-color:var(--green)}
+input:disabled{opacity:.45}
+.field{margin-bottom:12px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+small,.muted{color:var(--muted)}
+.kpi{font-size:clamp(22px,3vw,29px);font-weight:800;color:#b4df82;margin-top:4px;overflow-wrap:anywhere}
+.kpi-label{font-size:13px;color:var(--muted);font-weight:650}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:780px}
+th{background:#344c31;color:#f4f7ef;text-align:left;padding:11px 9px;position:sticky;top:0}
+td{padding:8px 9px;border-bottom:1px solid var(--line);color:#e7eee2}
+td input{min-width:88px;padding:8px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#1b241d}
+.pill{display:inline-block;padding:4px 9px;border-radius:99px;background:#355b2d;color:#e7f6d9;font-size:11px;font-weight:800;letter-spacing:.25px}
+.note{background:#39351f;border:1px solid #7b692e;border-left:4px solid var(--yellow);border-radius:9px;padding:12px;color:#f0e3b6;font-size:13px}
+.barrow{display:grid;grid-template-columns:115px 1fr 90px;gap:9px;align-items:center;margin:10px 0;font-size:13px}
+.track{height:13px;background:#111913;border-radius:99px;overflow:hidden}.fill{height:100%;border-radius:99px}
+svg{width:100%;height:auto;display:block}.chartbox{min-height:220px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button:disabled{opacity:.5;cursor:not-allowed}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+footer{color:var(--muted);font-size:12px;margin-top:18px;padding:12px 2px;border-top:1px solid var(--line)}
+#harvestRows>.card{background:var(--surface-2);border-left:4px solid var(--green)}
+#stockSummary,#harvestSummary{margin-top:18px}
+#dashboard .card.span-3{background:linear-gradient(145deg,#26372a,#202922);border-top:3px solid var(--green)}
+@media(max-width:850px){
+ .span-8,.span-6,.span-4,.span-3{grid-column:span 12}
+ .fields{grid-template-columns:1fr}
+ main{padding:0 12px 35px}
+ .card{padding:14px}
+ nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ nav button{width:100%;font-size:12px;padding:10px 5px}
+}
+@media(max-width:480px){
+ header{padding:19px 14px}
+ .barrow{grid-template-columns:90px 1fr 75px;font-size:12px}
+ .kpi{font-size:24px}
+}
+@media print{
+ body{background:white;color:#111}
+ nav,.actions,footer{display:none}
+ .panel{display:block!important;page-break-after:always}
+ .card{box-shadow:none;background:white;color:#111;border:1px solid #bbb}
+ h2,h3,.kpi,label,td,.muted{color:#111}
+}
+
+.analysis-switch{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 2px}
+.analysis-switch button{min-height:44px;padding:10px 16px}
+.analysis-switch button.active{background:var(--green);color:#14200f;border-color:var(--green)}
+.analysis-view[hidden]{display:none!important}
+/* Beide Ansichten müssen im äußeren 12-Spalten-Raster die volle Breite belegen. */
+#analysisTextView,#analysisChartView{grid-column:1/-1;min-width:0;width:100%}
+.analysis-text-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.analysis-text-card{min-width:0}
+.analysis-text-card.stock-report{grid-column:1/-1}
+.analysis-text-card .report-block{padding:11px 13px;margin:9px 0;background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
+.analysis-text-card .report-block p{margin:4px 0;line-height:1.6}
+.analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.pie-card{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:17px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.pie-card h3{font-size:15px;line-height:1.4;min-height:2.7em;margin:0}
+.pie-layout{display:grid;grid-template-columns:minmax(118px,150px) minmax(0,1fr);align-items:center;gap:15px;min-width:0}
+.pie-donut{width:100%;max-width:150px;height:auto;aspect-ratio:1;justify-self:center}
+.pie-legend{display:grid;gap:10px;min-width:0}
+.pie-legend-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:9px;font-size:12px;line-height:1.4}
+.pie-legend-row b{text-align:right;white-space:normal;overflow-wrap:anywhere}
+.pie-key{display:flex;align-items:flex-start;gap:7px;min-width:0;overflow-wrap:anywhere}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;margin-top:3px}
+.analysis-explain{font-size:12px;color:var(--muted);margin:0;padding-top:9px;border-top:1px solid var(--line);line-height:1.5}
+@media(max-width:760px){
+ .analysis-grid{grid-template-columns:1fr}
+ .analysis-text-grid{grid-template-columns:1fr}
+ .analysis-text-card.stock-report{grid-column:auto}
+ .pie-layout{grid-template-columns:minmax(110px,140px) minmax(0,1fr);gap:12px}
+}
+@media(max-width:420px){
+ .pie-card{padding:13px}
+ .pie-layout{grid-template-columns:1fr;justify-items:center}
+ .pie-donut{width:142px}
+ .pie-legend{width:100%}
+ .analysis-switch{display:grid;grid-template-columns:1fr 1fr}
+ .analysis-switch button{padding:9px 6px;font-size:12px}
+}
+
+/* V13 – konsistentes Layout, bessere Lesbarkeit und responsive Raster */
+:root{
+ --bg:#141a16;--surface:#202922;--surface-2:#263329;--line:#39483b;
+ --ink:#f3f6ef;--muted:#b8c4b5;--green:#8bc34a;--green-dark:#527d32;
+ --yellow:#e7c34f;--red:#df7668;
+}
+body{line-height:1.55;letter-spacing:.05px}
+header{padding-top:23px;padding-bottom:23px}
+header h1{font-weight:850;letter-spacing:.1px}
+header p{font-size:13px;letter-spacing:.25px}
+main{max-width:1320px;margin:18px auto 0;padding-left:22px;padding-right:22px}
+nav{
+ position:sticky;top:0;z-index:20;display:flex;gap:7px;flex-wrap:wrap;
+ padding:10px 12px;margin:0 -12px 20px;background:#141a16ed;
+ border:1px solid #354237;border-radius:13px;backdrop-filter:blur(12px)
+}
+nav button{
+ flex:1 1 auto;min-width:130px;border-radius:8px;padding:10px 13px;
+ font-size:13px;white-space:nowrap
+}
+.panel{scroll-margin-top:90px}
+.grid{gap:16px}
+.card{
+ padding:19px;background:linear-gradient(155deg,#222c25,#1d261f);
+ border:1px solid #3b4a3d;border-radius:14px;
+ box-shadow:0 6px 18px #00000020
+}
+.card>h2{padding-bottom:10px;border-bottom:1px solid #39483b;margin-bottom:15px}
+h2{font-size:18px;line-height:1.3}
+h3{font-size:15px;line-height:1.35}
+p{margin:10px 0}
+.muted,small{line-height:1.5;color:#bac6b7}
+.fields{gap:14px}
+.field{margin-bottom:13px}
+label{font-size:12px;letter-spacing:.2px;margin-bottom:6px;color:#dce7d8}
+input,select{
+ min-height:43px;border:1px solid #536653;border-radius:9px;
+ padding:10px 12px;background:#151e17;color:#f3f6ef
+}
+input[type=checkbox]{width:22px;min-height:22px;accent-color:var(--green)}
+input:focus-visible,select:focus-visible,button:focus-visible{
+ outline:3px solid #a6d86d;outline-offset:2px
+}
+button,.btn{min-height:42px;border-radius:9px}
+.btn{padding:10px 14px;font-size:13px}
+.btn.primary,nav button.active,.analysis-switch button.active{
+ background:linear-gradient(135deg,#9bd45a,#78ad3b);color:#14200f;
+ border-color:#9bd45a;box-shadow:0 2px 8px #7cae3a25
+}
+.actions{gap:9px}
+.kpi{font-size:clamp(23px,2.4vw,31px);line-height:1.2;color:#b7e486;font-variant-numeric:tabular-nums}
+.kpi-label{font-size:12px;line-height:1.35;letter-spacing:.25px;text-transform:uppercase}
+#dashboard .card.span-3{min-height:112px;display:flex;flex-direction:column;justify-content:center}
+#dashboard .card.span-3 .kpi{margin-top:8px}
+.table-wrap{max-width:100%;overscroll-behavior-x:contain}
+table{font-size:12px}
+th{padding:12px 10px;background:#344b32}
+td{padding:9px 10px}
+td input{min-width:94px}
+.table-wrap:after{content:"";display:block}
+.note{border-radius:10px;line-height:1.5}
+.barrow{grid-template-columns:minmax(90px,130px) minmax(60px,1fr) minmax(70px,95px);gap:10px}
+.track{height:12px}
+.chartbox{min-height:190px;padding:6px 0}
+.chartbox svg{max-height:230px}
+.pie-card{padding:17px;border-radius:13px}
+.pie-card h3{padding-bottom:9px;border-bottom:1px solid var(--line)}
+.pie-layout{justify-content:flex-start}
+.pie-donut{width:138px;height:138px;flex-basis:138px}
+.pie-legend-row{font-size:12px;line-height:1.4}
+#harvestRows>.card{margin:12px 0!important;padding:16px}
+#stockSummary,#harvestSummary{padding-top:4px}
+#stockSummary table,#harvestSummary table{min-width:760px}
+footer{margin-top:24px;padding:16px 4px;font-size:11px}
+@media(min-width:851px){
+ .span-8{grid-column:span 8}.span-6{grid-column:span 6}
+ .span-4{grid-column:span 4}.span-3{grid-column:span 3}
+}
+@media(max-width:850px){
+ main{padding:0 14px 40px}
+ .grid{gap:12px}
+ .span-8,.span-6,.span-4{grid-column:span 12}
+ .span-3{grid-column:span 6}
+ .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ nav button{min-width:0;width:100%;font-size:12px;padding:9px 5px}
+ .card{padding:16px}
+}
+@media(max-width:560px){
+ header{padding:18px 14px 17px}
+ header h1{font-size:23px}
+ header p{max-width:340px;font-size:12px}
+ main{margin-top:12px;padding:0 10px 30px}
+ nav{margin:0 -2px 14px;padding:7px;gap:5px;border-radius:11px}
+ nav button{font-size:11px;min-height:43px;padding:7px 3px;white-space:normal;line-height:1.2}
+ .grid{gap:10px}
+ .span-3{grid-column:span 6}
+ .card{padding:13px;border-radius:12px}
+ .card>h2{font-size:16px;margin-bottom:12px;padding-bottom:9px}
+ h3{font-size:14px}
+ .kpi{font-size:22px}
+ .kpi-label{font-size:10px}
+ .fields{grid-template-columns:1fr;gap:0}
+ .actions{display:grid;grid-template-columns:1fr}
+ .actions .btn{width:100%}
+ .barrow{grid-template-columns:82px minmax(40px,1fr) 72px;gap:7px;font-size:11px}
+ .pie-layout{gap:10px}
+ .pie-donut{width:120px;height:120px;flex-basis:120px}
+ .pie-legend{min-width:100%;gap:6px}
+ .pie-legend-row{font-size:11px}
+ .analysis-switch{display:grid;grid-template-columns:1fr 1fr}
+ .analysis-switch button{padding:9px 6px;font-size:12px}
+ .table-wrap{border-radius:8px}
+ table{font-size:11px}
+}
+@media(max-width:360px){
+ .span-3{grid-column:span 12}
+ nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
+ 
+.year-page-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;margin:12px 0 16px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}
+.year-page-toolbar label{font-weight:700}
+.year-page-select{min-width:190px;max-width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit}
+.year-page-hint{font-size:12px;color:var(--muted)}
+.analysis-compare-card{grid-column:1/-1;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:16px;margin-top:14px;min-width:0}
+.analysis-compare-card h2{margin-top:0}
+.compare-table{width:100%;border-collapse:collapse;min-width:760px}
+.compare-table th,.compare-table td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-size:13px}
+.compare-table th:first-child,.compare-table td:first-child{text-align:left}
+.compare-table thead th{color:var(--muted);font-weight:700}
+.compare-good{color:#8fc879;font-weight:700}.compare-bad{color:#f09b8d;font-weight:700}
+.compare-bars{display:grid;gap:14px}
+.compare-bar-row{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr) minmax(100px,auto);gap:12px;align-items:center}
+.compare-bar-label{font-size:13px;font-weight:700}
+.compare-track{height:14px;border-radius:20px;background:var(--line);overflow:hidden;display:flex}
+.compare-track span{height:100%;display:block}
+.compare-value{font-size:12px;text-align:right;white-space:nowrap;color:var(--muted)}
+.compare-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 16px}
+.compare-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+@media(max-width:650px){.compare-bar-row{grid-template-columns:1fr auto;gap:6px}.compare-bar-label{grid-column:1/-1}.compare-value{grid-column:2}.year-page-toolbar{align-items:stretch}.year-page-select{width:100%;max-width:none}}
+
+/* V22 mobile usability and accessibility */
+@media(max-width:650px){
+ main{padding-left:10px;padding-right:10px}
+ header h1{font-size:23px}
+ nav{grid-template-columns:repeat(2,minmax(0,1fr));max-height:34vh;overflow:auto}
+ nav button{min-width:0;white-space:normal;line-height:1.25;min-height:46px}
+ .card{padding:13px;border-radius:12px}
+ .actions .btn{flex:1 1 145px;min-height:46px}
+ input,select{font-size:16px;min-height:46px}
+ .table-wrap{margin:0 -2px}
+ #animalRows input,#animalRows select{min-width:105px}
+ .page-year-indicator{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+/* V19 usability refinements */
+:root{scroll-behavior:smooth}
+.panel{scroll-margin-top:86px}
+.year-page-toolbar{position:relative}
+.year-page-select{min-height:44px;font-weight:700}
+.year-page-hint{flex:1;min-width:180px}
+.table-wrap{overscroll-behavior-x:contain}
+.table-wrap table th:first-child,.table-wrap table td:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
+.table-wrap table thead th:first-child{z-index:2}
+#monthRows input{min-width:92px;min-height:40px}
+#animalRows input[type=number],#animalRows select{min-width:88px;min-height:40px}
+#animalRows select{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text)}
+.page-year-indicator{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:rgba(125,166,73,.14);border:1px solid rgba(125,166,73,.35);font-size:12px;font-weight:800;margin:0 0 12px}
+.analysis-compare-card{overflow:hidden}
+.compare-table th{position:sticky;top:0;background:var(--surface-2);z-index:1}
+.compare-table td small{color:var(--muted)}
+.compare-bars{gap:18px}
+.compare-bar-group{padding:12px 0;border-bottom:1px solid var(--line)}
+.compare-bar-group h3{margin:0 0 10px}
+.compare-bar-row{grid-template-columns:minmax(100px,150px) minmax(0,1fr) minmax(130px,auto);margin:7px 0}
+.compare-track{height:12px}
+.compare-track .demand{background:#b78343}
+.compare-track .harvest{background:#65a85b}
+.compare-track .production{background:#438fbb}
+.compare-value{white-space:normal}
+@media(max-width:650px){
+ .table-wrap{border-radius:10px}
+ .table-wrap table{font-size:12px}
+ .year-page-toolbar{padding:12px}
+ .compare-bar-row{grid-template-columns:1fr;gap:5px}
+ .compare-value{text-align:left}
+}
+
+.expense-kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.expense-kpi strong{display:block;font-size:22px;color:#b4df82}
+.expense-bar{display:grid;grid-template-columns:minmax(110px,1fr) 3fr 90px;gap:9px;align-items:center;margin:9px 0;font-size:13px}
+.expense-bar-track{height:12px;background:#111913;border-radius:20px;overflow:hidden}
+.expense-bar-fill{height:100%;background:var(--yellow);border-radius:20px}
+.expense-thumb{max-width:150px;max-height:100px;border-radius:7px;border:1px solid var(--line);object-fit:contain}
+#expenseRows .expense-row{display:grid;grid-template-columns:100px minmax(130px,1fr) 100px 90px auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+#expenseRows .expense-row small{display:block}
+@media(max-width:650px){#expenseRows .expense-row{grid-template-columns:1fr 1fr}#expenseRows .expense-row .expense-action{grid-column:1/-1}.expense-bar{grid-template-columns:95px 1fr 70px;font-size:12px}}
+
+/* V29 – echte Smartphone-Ansicht: Navigation im Fluss und Monatswerte als lesbare Karten */
+@media(max-width:650px){
+ nav{
+  position:relative;top:auto;max-height:none;overflow:visible;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  margin:0 -2px 14px;padding:7px;gap:6px;
+  background:var(--bg);backdrop-filter:none;
+ }
+ nav button{min-width:0;width:100%;white-space:normal;line-height:1.25;min-height:48px;font-size:12px;padding:9px 6px}
+ .panel{scroll-margin-top:12px}
+ #months .table-wrap{overflow:visible;border:0;background:transparent}
+ #months table{display:block;min-width:0;width:100%;font-size:14px}
+ #months thead{display:none}
+ #months tbody{display:grid;grid-template-columns:1fr;gap:12px}
+ #months tbody tr{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  padding:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;min-width:0
+ }
+ #months tbody td{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  min-width:0;padding:7px 8px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface-2);font-size:13px;
+  overflow-wrap:anywhere
+ }
+ #months tbody td:first-child{
+  grid-column:1/-1;position:static;background:#344b32;
+  color:#fff;font-size:16px;font-weight:800
+ }
+ #months tbody td::before{
+  content:attr(data-label);display:block;color:var(--muted);
+  font-size:10px;line-height:1.25;font-weight:800;text-transform:uppercase;
+  letter-spacing:.25px
+ }
+ #months tbody td:first-child::before{display:none}
+ #months tbody td input{width:100%;min-width:0;max-width:100%;font-size:16px;min-height:44px;padding:8px}
+ #months tbody td:nth-child(10),#months tbody td:nth-child(11){grid-column:span 1}
+ .table-wrap table th:first-child,.table-wrap table td:first-child{position:static}
+ #stockSummary .table-wrap,#harvestSummary .table-wrap{overflow-x:auto}
+}
+@media(max-width:380px){
+ #months tbody tr{grid-template-columns:1fr}
+ #months tbody td:first-child{grid-column:auto}
+}
+
+</style>
+</head>
+<body>
+<header><h1>🐃 LS25 · Wasserbüffel-Hofmanager</h1><p>Hofverwaltung · Futter & TMR · Ernteplanung · Lager · Milchversorgung</p></header>
+<main>
+<div class="muted" style="font-size:12px;margin:0 2px 9px">HOFVERWALTUNG <span style="color:var(--yellow)">/</span> Betriebsjahr <b id="activeYearLabel">1</b></div>
+<nav>
+<button type="button" class="active" data-tab="dashboard" aria-pressed="true">🏡 Hofübersicht</button>
+<button type="button" data-tab="master">🐃 Tiere & Hof</button>
+<button type="button" data-tab="months">📅 Monatsplan</button>
+<button type="button" data-tab="production">📦 Bedarf</button>
+<button type="button" data-tab="harvest">🌾 Ernten & Lager</button>
+<button type="button" data-tab="expenses">💶 Betriebskosten</button>
+<button type="button" data-tab="analysis">📊 Auswertung</button>
+</nav>
+<div id="appError" class="note" hidden role="alert" style="margin-bottom:14px"></div>
+
+<section id="dashboard" class="panel active">
+<div class="grid">
+<div class="card span-3"><div class="kpi-label">Tiere im Dezember</div><div class="kpi" id="kAnimals">–</div></div>
+<div class="card span-3"><div class="kpi-label">TMR-Jahresverbrauch</div><div class="kpi" id="kTmr">–</div></div>
+<div class="card span-3"><div class="kpi-label">Milchproduktion/Jahr</div><div class="kpi" id="kMilk">–</div></div>
+<div class="card span-3"><div class="kpi-label">Futterwagen/Jahr</div><div class="kpi" id="kWagons">–</div></div>
+<div class="card span-6"><h2>Milchproduktion und Fabrikbedarf</h2><div id="milkChart" class="chartbox"></div></div>
+<div class="card span-6"><h2>TMR und Einstreu je Monat</h2><div id="feedChart" class="chartbox"></div></div>
+<div class="card span-6"><h2>Altersentwicklung der Herde</h2><div id="ageChart" class="chartbox"></div></div>
+<div class="card span-6"><h2>Jahresbilanz</h2><div id="annualSummary"></div></div>
+<div class="card span-6"><h2>Aktueller Lagerstatus</h2><div id="dashboardStock"></div><div id="stockAlerts"></div></div>
+<div class="card span-6"><h2>Milchtank – aktueller Bestand</h2><div id="dashboardMilkTank"></div></div>
+<div class="card span-12"><h2>TMR-Mischungsrechner</h2><p class="muted">Gib die gewünschte Anzahl vollständiger Mischwagen ein. Die Zutatenmengen werden nach deiner Rezeptur berechnet.</p><div class="fields"><div class="field"><label for="mixerLoads">Anzahl Mischwagen</label><input id="mixerLoads" type="number" min="0" step="0.1" value="1"></div><div class="field"><label>Gesamtmenge</label><div class="kpi" id="mixerTotal">45.000 L</div></div></div><div id="mixerResult"></div><div id="recipeBars"></div><div class="note">Rezept je 45.000-L-Wagen: 9.000 L Stroh + 13.500 L Heu + 22.500 L Maissilage. Rezeptanteile und Kapazität basieren auf den Hofeinstellungen.</div></div>
+<div class="card span-12"><h2>Datensicherung & Datenübertragung</h2><p class="muted">Sichere alle Tiere, Monatsdaten, Ernten, Lagerwerte und Einstellungen als Datei. Auf einem anderen Gerät kannst du die Datei wieder importieren.</p><div class="actions"><button class="btn primary" id="backupExportBtn" type="button">⬇ Backup exportieren</button><button class="btn" id="backupImportBtn" type="button">⬆ Backup importieren</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div><small id="backupMsg">Empfehlung: regelmäßig ein Backup speichern, besonders vor Geräte- oder Browserwechsel.</small></div>
+</div>
+</section>
+
+<section id="master" class="panel">
+<div class="grid">
+<div class="card span-6"><h2>Tierbestand & Milch</h2><div class="fields">
+<div class="field"><label>Startbestand Milchtank (Liter)</label><input id="milkTankOpening" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>Aktuelles Betriebsjahr</label><select id="year" aria-label="Betriebsjahr auswählen"></select></div>
+<div class="field"><label>Anzahl Tiere</label><div class="kpi" id="herdCount">0</div><small>Jedes Tier wird unten einzeln verwaltet.</small></div>
+<div class="field"><label>Milch je milchgebendem Tier/Monat (Liter)</label><input id="milkPerAnimal" type="number" value="500" min="0"></div>
+<div class="field"><label>Fabrikbedarf pro Monat (Liter)</label><input id="factory" type="number" value="8000" min="0"></div>
+</div></div>
+<div class="card span-12"><h2>Einzelne Tiere verwalten</h2><p class="muted">Trage das Alter zu Beginn des Zugangsmonats ein. Bei übernommenen Tieren ist der Zugangsmonat Januar. Bei nachgekauften Tieren wählst du den Monat, ab dem sie zum Bestand und zur Milchberechnung zählen.</p><div class="table-wrap"><table style="min-width:760px"><thead><tr><th>Tier</th><th>Zugang ab Monat</th><th>Alter bei Zugang (Monate)</th><th>Milchproduktion gestartet?</th><th>Alter bei erster Milch (Monate)</th><th>Aktion</th></tr></thead><tbody id="animalRows"></tbody></table></div><div class="actions"><button class="btn primary" id="addAnimalBtn" type="button">＋ Tier hinzufügen</button></div></div>
+<div class="card span-6"><h2>Futter & Erträge</h2><div class="fields">
+<div class="field"><label>Futterwagen-Kapazität (Liter)</label><input id="capacity" type="number" value="45000" min="1"></div>
+<div class="field"><label>Stroh-Ertrag (Liter/ha)</label><input id="strawYield" type="number" value="12000" min="1"></div>
+<div class="field"><label>Heu-Ertrag (Liter/ha)</label><input id="hayYield" type="number" value="18000" min="1"></div>
+<div class="field"><label>Maissilage-Ertrag (Liter/ha)</label><input id="silageYield" type="number" value="45000" min="1"></div>
+<div class="field"><label>Strohballen Einstreu (Liter/Ballen)</label><input id="bale" type="number" value="7000" min="1"></div>
+</div><p class="muted">Die Rezeptur ist auf die genannten Liter je 45.000-L-Wagen festgelegt. Die Erträge sind Beispielwerte und können an deine Mod angepasst werden.</p></div>
+<div class="card span-12"><h2>Feste TMR-Rezeptur</h2><div class="grid">
+<div class="span-4"><div class="kpi">9.000 L</div><b>Stroh · 20 %</b></div>
+<div class="span-4"><div class="kpi">13.500 L</div><b>Heu · 30 %</b></div>
+<div class="span-4"><div class="kpi">22.500 L</div><b>Maissilage · 50 %</b></div>
+</div><div class="actions"><button class="btn primary" id="saveBtn">Einstellungen speichern</button><button class="btn" id="resetBtn">Beispielwerte laden</button></div><small id="saveMsg">Änderungen werden auch lokal im Browser gespeichert.</small></div>
+</div>
+</section>
+
+<section id="months" class="panel">
+<div class="card">
+<h2>Monatliche Verbrauchs- und Bestandsplanung</h2>
+<div class="year-page-toolbar"><label for="monthsYear">Betriebsjahr dieser Seite</label><select id="monthsYear" class="year-page-select"></select><span class="year-page-hint">Verbrauchsdaten und Tierbedarf werden getrennt je Betriebsjahr gespeichert.</span></div>
+<p class="muted">Trage TMR-Verbrauch und Einstreu in Litern ein. Tierbestand und Alter werden aus den Einzeltieren übernommen; jedes Tier wird monatlich automatisch ein Monat älter.</p>
+<div class="table-wrap"><table><thead><tr><th>Monat</th><th>Tiere</th><th>Alter Ø (Mon.)</th><th>TMR-Verbrauch (L)</th><th>Einstreu (L)</th><th>Stroh TMR (L)</th><th>Heu TMR (L)</th><th>Maissilage (L)</th><th>Wagen (45.000 L)</th><th>Milchproduktion (L)</th><th>Milch ausgeliefert (L)</th><th>Fabrikdeckung</th><th>Einstreu-Ballen</th></tr></thead><tbody id="monthRows"></tbody></table></div>
+<div class="actions"><button class="btn primary" id="updateBtn">Berechnungen aktualisieren</button><button class="btn" id="csvBtn">Monatsdaten als CSV exportieren</button></div>
+</div>
+</section>
+
+<section id="production" class="panel">
+<div class="grid">
+<div class="card span-12"><h2>Bedarf – Jahresübersicht</h2>
+<div class="year-page-toolbar"><label for="productionYear">Betriebsjahr dieser Seite</label><select id="productionYear" class="year-page-select"></select></div><p class="muted">Hier siehst du den gesamten ermittelten Bedarf aus deinen Monatseingaben: TMR-Gesamtmenge, die dafür benötigten Mengen an Stroh, Heu und Maissilage sowie Einstreu. Einstreu-Stroh wird ausschließlich in 7.000-Liter-Ballen ausgewiesen; TMR-Stroh bleibt in Litern.</p><div id="productionTable"></div></div>
+<div class="card span-12"><h2>Milchversorgung der Fabrik</h2><div id="factorySummary"></div></div>
+
+</div>
+</section>
+
+<section id="harvest" class="panel">
+<div class="grid">
+<div class="card span-12">
+<h2>Ernten – mehrere Erntevorgänge erfassen</h2>
+<div class="year-page-toolbar"><label for="harvestYear">Betriebsjahr dieser Seite</label><select id="harvestYear" class="year-page-select"></select></div>
+<p class="muted">Du kannst beliebig viele Erntevorgänge pro Betriebsjahr eintragen. Stroh für TMR wird in Litern erfasst. Stroh für Einstreu wird ausschließlich als 7.000-Liter-Ballen erfasst.</p>
+<div class="actions"><button class="btn primary" id="addHarvestBtn" type="button">＋ Ernte hinzufügen</button></div>
+<div id="harvestRows"></div>
+<div id="harvestSummary"></div>
+</div>
+<div class="card span-12">
+<h2>Ernteplanung – Sollmenge und Ist-Ernte</h2>
+<p class="muted">Lege je Betriebsjahr deine geplanten Erntemengen fest. Vergleiche anschließend die tatsächlich eingetragenen Ernten mit deinen Zielen. Mit „Jahresbedarf übernehmen“ werden die aktuell berechneten Verbrauchsmengen als Ernteziele eingetragen; du kannst sie danach anpassen.</p>
+<div class="actions"><button class="btn" id="harvestPlanFromNeedBtn" type="button">Jahresbedarf als Ernteziel übernehmen</button><button class="btn primary" id="saveHarvestPlanBtn" type="button">Ernteziele speichern</button></div>
+<div id="harvestPlan"></div>
+</div>
+<div class="card span-12">
+<h2>Lagerverwaltung – Startbestand & Mindestbestand</h2>
+<p class="muted">Der Startbestand wird einmalig zu Beginn von Betriebsjahr 1 eingetragen. Ernten werden addiert und der errechnete Verbrauch wird abgezogen. Der Restbestand wird automatisch ins nächste Betriebsjahr übernommen.</p>
+<div class="fields">
+<div class="field"><label for="openingStrawTmr">Startbestand Stroh für TMR (Liter)</label><input id="openingStrawTmr" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="openingBeddingBales">Startbestand Einstreu-Stroh (7.000-L-Ballen)</label><input id="openingBeddingBales" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="openingHay">Startbestand Heu (Liter)</label><input id="openingHay" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="openingSilage">Startbestand Maissilage (Liter)</label><input id="openingSilage" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="minimumStrawTmr">Mindestbestand TMR-Stroh (Liter)</label><input id="minimumStrawTmr" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="minimumBeddingBales">Mindestbestand Einstreu (Ballen)</label><input id="minimumBeddingBales" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="minimumHay">Mindestbestand Heu (Liter)</label><input id="minimumHay" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="minimumSilage">Mindestbestand Maissilage (Liter)</label><input id="minimumSilage" type="number" min="0" step="1" value="0"></div>
+</div>
+<div class="actions"><button class="btn primary" id="saveStockBtn" type="button">Start- und Mindestbestand speichern</button></div>
+<div id="stockSummary"></div>
+</div>
+<div class="card span-12"><h2>Jahresabschluss</h2>
+<p class="muted">Schließt das ausgewählte Betriebsjahr mit einer Momentaufnahme von Verbrauch, Ernte, Milch und Lagerbilanz ab. Ein abgeschlossenes Jahr wird gegen Änderungen gesperrt. Der Restbestand wird für das Folgejahr aus der Lagerbilanz übernommen.</p>
+<div id="yearCloseStatus"></div>
+<div class="actions"><button type="button" class="btn primary" id="closeYearBtn">Jahr abschließen</button><button type="button" class="btn" id="reopenYearBtn">Abschluss aufheben</button><button type="button" class="btn" id="createNextYearBtn">Folgejahr anlegen</button><button type="button" class="btn" id="printYearReportBtn">PDF-Jahresbericht / Drucken</button></div>
+<div id="yearCloseReport"></div>
+</div>
+</div>
+</section>
+
+<section id="expenses" class="panel">
+<div class="grid">
+ <div class="card span-12">
+  <h2>💶 LS25-Betriebskosten erfassen</h2>
+  <p class="muted">Erfasst werden nur Ausgabepositionen, die in der Finanzübersicht des Landwirtschafts-Simulator 25 tatsächlich aufgeführt sind. Kraftstoff, Saatgut oder Dünger werden nicht separat geführt, wenn das Spiel sie nur als Sammelposten ausweist. Lade einen Screenshot aus dem Spiel hoch. Die Texterkennung kann Datum und Geldbeträge vorschlagen. Bitte kontrolliere die erkannten Werte immer vor dem Speichern – besonders bei mehreren Buchungszeilen.</p>
+  <div class="note">Die Texterkennung läuft im Browser über Tesseract.js. Beim ersten Start wird die OCR-Bibliothek und das deutsche Sprachpaket aus dem Internet geladen. Das Bild wird nicht an einen Chat oder Server dieser App gesendet.</div>
+  <div class="fields" style="margin-top:14px">
+   <div class="field"><label for="expensePhoto">Screenshot / Foto aus dem Spiel</label><input id="expensePhoto" type="file" accept="image/*" capture="environment"></div>
+   <div class="field"><label>Texterkennung</label><button type="button" class="btn primary" id="expenseOcrBtn">🔎 Foto auslesen</button><small id="expenseOcrStatus">Bild auswählen und Texterkennung starten.</small></div>
+  </div>
+  <div id="expensePhotoPreview" style="margin-top:8px"></div>
+  <div class="field"><label for="expenseOcrText">Erkannter Text (zur Kontrolle und zum Kopieren)</label><textarea id="expenseOcrText" rows="4" style="width:100%;border:1px solid #536451;border-radius:8px;padding:10px;background:#151d17;color:var(--ink)"></textarea></div>
+ </div>
+ <div class="card span-6">
+  <h2>LS25-Ausgabeposition speichern</h2>
+  <div class="fields">
+   <div class="field"><label for="expenseDate">Datum</label><input id="expenseDate" type="date"></div>
+   <div class="field"><label for="expenseCategory">Kostenposition laut LS25-Finanzübersicht</label><select id="expenseCategory">
+    <option>Neue Fahrzeuge</option>
+    <option>Neue Handwerkzeuge</option>
+    <option>Neuer Viehbestand</option>
+    <option>Baukosten</option>
+    <option>Landkauf</option>
+    <option>Laufende Fahrzeugkosten</option>
+    <option>Leasingkosten Fahrzeuge</option>
+    <option>Gebäudeunterhalt</option>
+    <option>Produktionskosten</option>
+   </select></div>
+   <div class="field"><label for="expenseDescription">Beschreibung / Buchungstext</label><input id="expenseDescription" placeholder="z. B. Traktor-Reparatur"></div>
+   <div class="field"><label for="expenseAmount">Betrag (€)</label><input id="expenseAmount" type="number" min="0" step="0.01" placeholder="0,00"></div>
+   <div class="field"><label for="expenseVendor">Händler / Empfänger (optional)</label><input id="expenseVendor" placeholder="z. B. Werkstatt"></div>
+   <div class="field"><label for="expenseReference">Beleg / Notiz (optional)</label><input id="expenseReference" placeholder="z. B. Screenshot Tankstelle"></div>
+  </div>
+  <div class="actions"><button type="button" class="btn primary" id="expenseSaveBtn">＋ Betriebskosten speichern</button><button type="button" class="btn" id="expenseClearBtn">Eingabe leeren</button></div>
+  <small id="expenseFormMsg"></small>
+ </div>
+ <div class="card span-6">
+  <h2>Auswertung Betriebskosten</h2>
+  <div class="fields">
+   <div class="field"><label for="expenseYearFilter">Betriebsjahr</label><select id="expenseYearFilter"><option value="all">Alle Betriebsjahre</option></select></div>
+   <div class="field"><label for="expenseMonthFilter">Monat</label><select id="expenseMonthFilter"><option value="all">Gesamtes Jahr</option><option value="1">Januar</option><option value="2">Februar</option><option value="3">März</option><option value="4">April</option><option value="5">Mai</option><option value="6">Juni</option><option value="7">Juli</option><option value="8">August</option><option value="9">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option></select></div>
+  </div>
+  <div id="expenseKpis" class="fields"></div>
+  <div id="expenseCategoryBreakdown"></div>
+  <div id="expensePositionBreakdown"></div>
+  <div id="expenseMonthlyBreakdown"></div>
+  <div class="actions"><button type="button" class="btn" id="expenseCsvBtn">⬇ Kosten als CSV exportieren</button><button type="button" class="btn" id="expensePrintBtn">🖨 Kostenbericht drucken / PDF</button></div>
+ </div>
+ <div class="card span-12">
+  <h2>Erfasste Einzelkosten</h2>
+  <div id="expenseRows"></div>
+ </div>
+</div>
+</section>
+
+<section id="analysis" class="panel">
+<div class="grid">
+<div class="card span-12">
+<h2>Auswertung nach Betriebsjahr</h2>
+<p class="muted">Wähle ein einzelnes Betriebsjahr oder „Gesamt“, um alle gespeicherten Betriebsjahre zusammen auszuwerten.</p>
+<div class="field" style="max-width:320px"><label for="analysisYear">Auswertung anzeigen</label><select id="analysisYear" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;font:inherit"><option value="all">Gesamt – alle Betriebsjahre</option></select></div>
+<div id="analysisSummary"></div>
+<div class="analysis-compare-card"><h2>Jahresvergleich – Bedarf und Produktion</h2><p class="muted">Jedes Betriebsjahr wird separat gegenübergestellt. So erkennst du sofort, was benötigt, geerntet bzw. produziert wurde und wo Überschüsse oder Fehlmengen entstehen.</p><div id="analysisCompare"></div></div>
+<div class="analysis-switch" role="group" aria-label="Auswertungsdarstellung">
+<button type="button" id="analysisTextBtn" class="active" aria-pressed="true">☷ Textauswertung</button>
+<button type="button" id="analysisChartBtn" aria-pressed="false">◔ Kreisdiagramme</button>
+</div>
+</div>
+<div id="analysisTextView" class="analysis-view">
+<div class="analysis-text-grid">
+<div class="card analysis-text-card"><h2>Futterbedarf & Ernte</h2><div id="analysisNeed"></div></div>
+<div class="card analysis-text-card"><h2>Milchproduktion & Lieferung</h2><div id="analysisMilk"></div></div>
+<div class="card analysis-text-card stock-report"><h2>Bestandsbericht</h2><div id="analysisStockText"></div></div>
+</div>
+</div>
+<div id="analysisChartView" class="analysis-view" hidden>
+<div class="analysis-grid" id="analysisCharts"></div>
+<div class="analysis-compare-card"><h2>Produktion im Vergleich zum Bedarf</h2><div id="analysisBars"></div></div>
+</div>
+</div>
+</section>
+<footer>LS25-Hofmanager V23 – übersichtliches Hof-Dashboard mit Lager, TMR, Milch, Ernte und Auswertung. Milchleistung, Altersschwelle, Verbrauch und Erträge bitte passend zu deiner verwendeten Wasserbüffel-Mod einstellen. Daten bleiben in diesem Browser gespeichert, sofern lokaler Speicher verfügbar ist.</footer>
+</main>
+<script>
+const months=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const ids=["milkPerAnimal","factory","capacity","strawYield","hayYield","silageYield","bale"];
+const defaults={year:1,milkPerAnimal:500,factory:8000,capacity:45000,strawYield:12000,hayYield:18000,silageYield:45000,bale:7000};
+let herd=[]; let nextAnimalId=1;
+let data=months.map((m,i)=>({tmr:0,bedding:0,milkDelivered:0}));
+let yearData={};
+let yearHerdData={};
+let yearSettings={};
+let yearInitialized={};
+let harvestData={};
+let harvestPlans={};
+let yearClosures={};
+let operatingExpenses=[];
+let nextExpenseId=1;
+let stockSettings={strawTmr:0,beddingBales:0,hay:0,silage:0,minStrawTmr:0,minBeddingBales:0,minHay:0,minSilage:0};
+let milkTankOpening=0;
+const fmt=n=>new Intl.NumberFormat("de-DE",{maximumFractionDigits:1}).format(Number(n)||0);
+const val=id=>Math.max(0,Number(document.getElementById(id).value)||0);
+function getSettings(){let o={};ids.forEach(id=>o[id]=val(id));o.year=Number(activeYear());return o}
+function activeYear(){return String(Math.max(1,Math.floor(Number(document.getElementById("year").value)||1)))}
+function knownYears(selected=activeYear()){
+ const keys=[...Object.keys(yearData),...Object.keys(yearHerdData),...Object.keys(yearSettings),...Object.keys(harvestData)]
+   .map(Number).filter(n=>Number.isInteger(n)&&n>=1);
+ const current=Number(selected)||Number(activeYear());
+ const max=Math.max(1,current,...keys);
+ return [...new Set([1,...keys,max+1])].sort((a,b)=>a-b);
+}
+function refreshYearOptions(selected=activeYear()){
+ const years=knownYears(selected);
+ ["year","monthsYear","productionYear","harvestYear"].forEach(id=>{
+   const el=document.getElementById(id);if(!el)return;
+   el.innerHTML=years.map(y=>`<option value="${y}">Betriebsjahr ${y}${y===Math.max(...years)?" · neues Jahr":""}</option>`).join("");
+   el.value=String(selected);
+ });
+}
+function syncYearSelectors(){
+ const y=activeYear();
+ ["monthsYear","productionYear","harvestYear"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=y;});
+}
+function emptyYearMonths(){return months.map(()=>({tmr:0,bedding:0,milkDelivered:0}))}
+function seedYearFromPrevious(year){
+ const n=Math.max(1,Math.floor(Number(year)||1)),key=String(n),prev=String(n-1);
+ const prior=Array.isArray(yearHerdData[prev])?yearHerdData[prev]:herd;
+ // Nur der Tierbestand und die Grundeinstellungen werden übernommen.
+ // Verbrauch, Ernten und Monatswerte starten in jedem neuen Jahr bei null.
+ yearHerdData[key]=prior.map(a=>({...a,age:Math.max(0,Number(a.age)||0)+12,startMonth:1}));
+ yearSettings[key]={...(yearSettings[prev]||getSettings()),year:n};
+ yearData[key]=emptyYearMonths();
+ harvestData[key]=[];
+ harvestPlans[key]={};
+ yearInitialized[key]=true;
+}
+function getHerdForYear(year=activeYear()){
+ const key=String(Math.max(1,Math.floor(Number(year)||1)));
+ if(!Array.isArray(yearHerdData[key]))yearHerdData[key]=key===activeYear()?herd.map(a=>({...a})):[];
+ return yearHerdData[key];
+}
+function getSettingsForYear(year=activeYear()){
+ const key=String(Math.max(1,Math.floor(Number(year)||1)));
+ return {...getSettings(),...(yearSettings[key]||{}),year:Number(key)};
+}
+function saveActiveYearData(year=activeYear()){
+ const key=String(Math.max(1,Math.floor(Number(year)||1)));
+ yearData[key]=data.map(d=>({...d}));
+ yearHerdData[key]=herd.map(a=>({...a}));
+ yearSettings[key]={...getSettings(),year:Number(key)};
+}
+function applyYearSettings(year){
+ const s=yearSettings[String(year)];
+ if(s)ids.forEach(id=>{if(id!=="year"&&s[id]!==undefined)document.getElementById(id).value=s[id]});
+}
+function persist(){try{saveActiveYearData();localStorage.setItem("ls25buffalo_settings",JSON.stringify({...getSettings(),year:Number(activeYear())}));localStorage.setItem("ls25buffalo_months",JSON.stringify(data));localStorage.setItem("ls25buffalo_year_data",JSON.stringify(yearData));localStorage.setItem("ls25buffalo_year_herd_data",JSON.stringify(yearHerdData));localStorage.setItem("ls25buffalo_year_settings",JSON.stringify(yearSettings));localStorage.setItem("ls25buffalo_year_initialized",JSON.stringify(yearInitialized));localStorage.setItem("ls25buffalo_harvest_data",JSON.stringify(harvestData));localStorage.setItem("ls25buffalo_harvest_plans",JSON.stringify(harvestPlans));localStorage.setItem("ls25buffalo_year_closures",JSON.stringify(yearClosures));localStorage.setItem("ls25buffalo_operating_expenses",JSON.stringify(operatingExpenses));localStorage.setItem("ls25buffalo_next_expense_id",String(nextExpenseId));localStorage.setItem("ls25buffalo_stock_settings",JSON.stringify(stockSettings));localStorage.setItem("ls25buffalo_herd",JSON.stringify(herd));localStorage.setItem("ls25buffalo_milk_tank_opening",String(milkTankOpening));localStorage.setItem("ls25buffalo_next_id",String(nextAnimalId))}catch(e){}}
+function load(){try{
+ let s=JSON.parse(localStorage.getItem("ls25buffalo_settings")||"null");
+ if(s)ids.forEach(id=>{if(s[id]!==undefined)document.getElementById(id).value=s[id]});
+ let yd=JSON.parse(localStorage.getItem("ls25buffalo_year_data")||"null");if(yd&&typeof yd==="object")yearData=yd;
+ let yh=JSON.parse(localStorage.getItem("ls25buffalo_year_herd_data")||"null");if(yh&&typeof yh==="object")yearHerdData=yh;
+ let ys=JSON.parse(localStorage.getItem("ls25buffalo_year_settings")||"null");if(ys&&typeof ys==="object")yearSettings=ys;
+ let yi=JSON.parse(localStorage.getItem("ls25buffalo_year_initialized")||"null");if(yi&&typeof yi==="object")yearInitialized=yi;
+ let hd=JSON.parse(localStorage.getItem("ls25buffalo_harvest_data")||"null");if(hd&&typeof hd==="object")harvestData=hd;
+ let hp=JSON.parse(localStorage.getItem("ls25buffalo_harvest_plans")||"null");if(hp&&typeof hp==="object")harvestPlans=hp;
+ let yc=JSON.parse(localStorage.getItem("ls25buffalo_year_closures")||"null");if(yc&&typeof yc==="object")yearClosures=yc;
+ let oe=JSON.parse(localStorage.getItem("ls25buffalo_operating_expenses")||"null");if(Array.isArray(oe))operatingExpenses=oe;
+ nextExpenseId=Number(localStorage.getItem("ls25buffalo_next_expense_id"))||Math.max(0,...operatingExpenses.map(x=>Number(x.id)||0))+1;
+ let st=JSON.parse(localStorage.getItem("ls25buffalo_stock_settings")||"null");if(st&&typeof st==="object")stockSettings={...stockSettings,...st};
+ let d=JSON.parse(localStorage.getItem("ls25buffalo_months")||"null");if(Array.isArray(d)&&d.length===12)data=d;
+ const savedYear=Math.max(1,Math.floor(Number(s?.year)||1));
+ refreshYearOptions(savedYear);
+ const currentYear=String(savedYear);
+ if(Array.isArray(yearData[currentYear]))data=yearData[currentYear];else yearData[currentYear]=data;
+ milkTankOpening=Math.max(0,Number(localStorage.getItem("ls25buffalo_milk_tank_opening"))||0);
+ document.getElementById("milkTankOpening").value=milkTankOpening;
+ let h=JSON.parse(localStorage.getItem("ls25buffalo_herd")||"null");
+ if(!Object.keys(yearHerdData).length && Array.isArray(h)){const oldYears=Object.keys(yearData);(oldYears.length?oldYears:[currentYear]).forEach(k=>yearHerdData[k]=h.map(a=>({...a})));}
+ if(!yearHerdData[currentYear]){
+   let count=Number(s?.animals??20),age=Number(s?.age??24);
+   yearHerdData[currentYear]=Array.from({length:Math.max(0,Math.min(500,count))},()=>({id:nextAnimalId++,age,milkStarted:age>=Number(s?.milkAge??24),firstMilkAge:Number(s?.milkAge??24)}));
+ }
+ herd=(yearHerdData[currentYear]||[]).map(a=>({...a}));
+ nextAnimalId=Number(localStorage.getItem("ls25buffalo_next_id"))||Math.max(0,...Object.values(yearHerdData).flat().map(a=>Number(a.id)||0))+1;
+ // Legacy years inherit the old global setup until the user edits them individually.
+ Object.keys(yearData).forEach(k=>{if(!yearSettings[k])yearSettings[k]={...getSettings(),year:Number(k)};});
+ if(!yearSettings[currentYear])yearSettings[currentYear]=getSettings();
+ }catch(e){herd=[]}}
+function calc(sourceData=data, sourceHerd=herd, sourceSettings=getSettings()){
+ const s=sourceSettings, activeHerd=sourceHerd, cap=Math.max(1,s.capacity), bale=Math.max(1,s.bale);
+ let totals={tmr:0,bedding:0,straw:0,hay:0,silage:0,wagonsExact:0,wagonsRounded:0,milk:0,milkDelivered:0,factory:0,bales:0};
+ let rows=[];
+ sourceData.forEach((d,i)=>{
+   const present=activeHerd.filter(a=>Math.max(1,Math.min(12,Number(a.startMonth)||1))<=i+1);
+   const ageTotal=present.reduce((sum,a)=>sum+Math.max(0,Number(a.age)||0)+(i+1-Math.max(1,Math.min(12,Number(a.startMonth)||1))),0);
+   const animals=present.length, age=animals?ageTotal/animals:0;
+   const milkAnimals=present.filter(a=>a.milkStarted && (Math.max(0,Number(a.age)||0)+(i+1-Math.max(1,Math.min(12,Number(a.startMonth)||1))))>=Math.max(0,Number(a.firstMilkAge)||0)).length;
+   const straw=d.tmr*.20, hay=d.tmr*.30, silage=d.tmr*.50;
+   const milk=milkAnimals*s.milkPerAnimal, factory=s.factory, wag=d.tmr/cap, bales=Math.ceil(d.bedding/bale);
+   let delivered=Math.max(0,Number(d.milkDelivered)||0); let r={month:months[i],animals,age,milkAnimals,tmr:d.tmr,bedding:d.bedding,straw,hay,silage,wag,milk,milkDelivered:delivered,factory,coverage:factory?milk/factory:0,bales};
+   rows.push(r);
+   ["tmr","bedding","straw","hay","silage","milk","milkDelivered","factory","bales"].forEach(k=>totals[k]+=r[k]);
+   totals.wagonsExact+=wag;
+ });
+ totals.wagonsRounded=Math.ceil(totals.tmr/cap);
+ return {s,rows,totals,cap,bale};
+}
+function renderHerd(){
+ const tb=document.getElementById("animalRows"); if(!tb)return; tb.innerHTML="";
+ herd.forEach((a,i)=>{
+  if(!Number.isFinite(Number(a.startMonth)))a.startMonth=1;
+  const tr=document.createElement("tr");
+  const monthOptions=months.map((m,j)=>`<option value="${j+1}" ${Number(a.startMonth)===j+1?"selected":""}>${m}</option>`).join("");
+  tr.innerHTML=`<td><b>Tier ${i+1}</b></td>
+  <td><select aria-label="Tier ${i+1} Zugang ab Monat" data-id="${a.id}" data-k="startMonth">${monthOptions}</select></td>
+  <td><input aria-label="Tier ${i+1} Alter bei Zugang" type="number" min="0" step="1" data-id="${a.id}" data-k="age" value="${Number(a.age)||0}"></td>
+  <td style="text-align:center"><input aria-label="Tier ${i+1} Milchproduktion gestartet" style="width:22px;height:22px" type="checkbox" data-id="${a.id}" data-k="milkStarted" ${a.milkStarted?'checked':''}></td>
+  <td><input aria-label="Tier ${i+1} Alter bei erster Milchproduktion" type="number" min="0" step="1" data-id="${a.id}" data-k="firstMilkAge" value="${a.firstMilkAge??''}" ${a.milkStarted?'':'disabled'}></td>
+  <td><button type="button" class="btn" data-remove="${a.id}">Entfernen</button></td>`;
+  tb.appendChild(tr);
+ });
+ document.getElementById("herdCount").textContent=herd.length;
+ tb.querySelectorAll('input,select').forEach(inp=>inp.addEventListener('change',e=>{
+   const a=herd.find(x=>String(x.id)===e.target.dataset.id);if(!a)return;
+   const k=e.target.dataset.k;
+   if(k==='milkStarted'){
+     a.milkStarted=e.target.checked;
+     if(a.milkStarted && (a.firstMilkAge===null||a.firstMilkAge===undefined||a.firstMilkAge===''))a.firstMilkAge=Number(a.age)||0;
+     renderHerd();
+   }else if(k==='startMonth')a.startMonth=Math.max(1,Math.min(12,Number(e.target.value)||1));
+   else a[k]=Math.max(0,Number(e.target.value)||0);
+   renderAll();
+ }));
+ tb.querySelectorAll('button[data-remove]').forEach(b=>b.addEventListener('click',()=>{
+   herd=herd.filter(a=>String(a.id)!==b.dataset.remove);renderHerd();renderAll();
+ }));
+}
+function renderMonths(){
+ const tb=document.getElementById("monthRows");tb.innerHTML="";
+ months.forEach((m,i)=>{
+  let tr=document.createElement("tr");
+  tr.innerHTML=`<td data-label="Monat"><b>${m}</b></td><td data-label="Tiere" id="animals${i}">–</td><td data-label="Alter Ø (Mon.)" id="age${i}">–</td><td data-label="TMR-Verbrauch (L)"><input aria-label="${m} TMR" type="number" min="0" step="1" data-i="${i}" data-k="tmr" value="${data[i].tmr}"></td><td data-label="Einstreu (L)"><input aria-label="${m} Einstreu" type="number" min="0" step="1" data-i="${i}" data-k="bedding" value="${data[i].bedding}"></td><td data-label="Stroh TMR (L)" id="straw${i}">–</td><td data-label="Heu TMR (L)" id="hay${i}">–</td><td data-label="Maissilage (L)" id="silage${i}">–</td><td data-label="Wagen" id="wag${i}">–</td><td data-label="Milchproduktion (L)" id="milk${i}">–</td><td data-label="Milch ausgeliefert (L)"><input aria-label="${m} ausgelieferte Milch" type="number" min="0" step="1" data-i="${i}" data-k="milkDelivered" value="${Number(data[i].milkDelivered)||0}"></td><td data-label="Fabrikdeckung" id="coverage${i}">–</td><td data-label="Einstreu-Ballen" id="bales${i}">–</td>`;
+  tb.appendChild(tr);
+ });
+ tb.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{
+   let i=Number(e.target.dataset.i),k=e.target.dataset.k,v=e.target.value;
+   data[i][k]=Math.max(0,Number(v)||0);
+   renderAll();
+ }));
+}
+function svgChart(rows,series,labels){
+ const W=560,H=210,L=42,R=12,T=15,B=35, plotW=W-L-R,plotH=H-T-B;
+ let max=Math.max(1,...series.flatMap(x=>rows.map(r=>r[x.key]||0)))*1.12;
+ let x=i=>L+i*plotW/11, y=v=>T+plotH-(v/max)*plotH;
+ let out=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monatsdiagramm"><line x1="${L}" y1="${T+plotH}" x2="${W-R}" y2="${T+plotH}" stroke="#899b86"/>`;
+ for(let g=0;g<=4;g++){let yy=T+plotH-g*plotH/4;out+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#526052"/><text x="${L-7}" y="${yy+4}" text-anchor="end" font-size="9" fill="#b4c0b1">${fmt(max*g/4)}</text>`}
+ rows.forEach((r,i)=>out+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="9" fill="#b4c0b1">${months[i].slice(0,3)}</text>`);
+ series.forEach((ser,si)=>{let pts=rows.map((r,i)=>`${x(i)},${y(r[ser.key]||0)}`).join(" ");out+=`<polyline points="${pts}" fill="none" stroke="${ser.color}" stroke-width="2.5" stroke-linejoin="round"/>`;rows.forEach((r,i)=>out+=`<circle cx="${x(i)}" cy="${y(r[ser.key]||0)}" r="2.7" fill="${ser.color}"/>`)});
+ out+="</svg><div style='display:flex;gap:15px;flex-wrap:wrap;font-size:12px'>"+series.map(s=>`<span><b style="color:${s.color}">●</b> ${s.label}</span>`).join("")+"</div>";
+ return out;
+}
+function updateMixer(){
+ const loads=Math.max(0,Number(document.getElementById("mixerLoads")?.value)||0);
+ const cap=Math.max(1,val("capacity")||45000);
+ const total=loads*cap;
+ const straw=total*.20,hay=total*.30,silage=total*.50;
+ const out=document.getElementById("mixerResult");
+ if(document.getElementById("mixerTotal"))document.getElementById("mixerTotal").textContent=fmt(total)+" L";
+ if(out)out.innerHTML=`<div class="grid"><div class="card span-4"><div class="kpi">${fmt(straw)} L</div><b>Stroh · 20 %</b></div><div class="card span-4"><div class="kpi">${fmt(hay)} L</div><b>Heu · 30 %</b></div><div class="card span-4"><div class="kpi">${fmt(silage)} L</div><b>Maissilage · 50 %</b></div></div>`;
+}
+function renderAll(save=true){
+ const {s,rows,totals,cap,bale}=calc();
+ const yearLabel=document.getElementById("activeYearLabel");if(yearLabel)yearLabel.textContent=Math.max(1,Math.floor(val("year")));
+ rows.forEach((r,i)=>{
+  document.getElementById("animals"+i).textContent=r.animals;
+  document.getElementById("age"+i).textContent=fmt(r.age);
+  ["straw","hay","silage","wag","milk","bales"].forEach(k=>document.getElementById(k+i).textContent=fmt(r[k]));
+  document.getElementById("coverage"+i).textContent=(r.coverage*100).toFixed(1)+" %";
+ });
+ document.getElementById("kAnimals").textContent=fmt(rows[11].animals);
+ document.getElementById("kTmr").textContent=fmt(totals.tmr)+" L";
+ document.getElementById("kMilk").textContent=fmt(totals.milk)+" L";
+
+ document.getElementById("kWagons").textContent=fmt(totals.wagonsRounded);
+ document.getElementById("milkChart").innerHTML=svgChart(rows,[{key:"milk",label:"Milchproduktion",color:"#2e7d55"},{key:"factory",label:"Fabrikbedarf",color:"#c69c55"}]);
+ document.getElementById("feedChart").innerHTML=svgChart(rows,[{key:"tmr",label:"TMR",color:"#3978aa"},{key:"bedding",label:"Einstreu",color:"#b78343"}]);
+ document.getElementById("ageChart").innerHTML=svgChart(rows,[{key:"age",label:"Durchschnittsalter (Monate)",color:"#7657a5"}]);
+ document.getElementById("annualSummary").innerHTML=`
+ <div class="barrow"><b>Fabrikdeckung</b><div class="track"><div class="fill" style="width:${Math.min(100,totals.factory?totals.milk/totals.factory*100:0)}%;background:#2e7d55"></div></div><b>${totals.factory?(totals.milk/totals.factory*100).toFixed(1):0}%</b></div>
+ <p>Jahresbedarf Fabrik: <b>${fmt(totals.factory)} L</b><br>Milchüberschuss / Fehlmenge: <b>${fmt(totals.milk-totals.factory)} L</b><br>Einstreu: <b>${fmt(totals.bedding)} L</b><br>Strohballen: <b>${fmt(totals.bales)} Stück</b></p>`;
+ const recipe=[["Stroh",9000,"#c69c55"],["Heu",13500,"#76a85c"],["Maissilage",22500,"#d6b34d"]];
+ document.getElementById("recipeBars").innerHTML=recipe.map(([n,v,c])=>`<div class="barrow"><b>${n}</b><div class="track"><div class="fill" style="width:${v/45000*100}%;background:${c}"></div></div><b>${fmt(v)} L</b></div>`).join("");
+ const ledgerNow=buildStockLedger(Math.max(1,Math.floor(val("year"))));
+ const stockNow=ledgerNow[ledgerNow.length-1];
+ const stockLabels={strawTmr:"TMR-Stroh",beddingBales:"Einstreu",hay:"Heu",silage:"Maissilage"};
+ document.getElementById("dashboardStock").innerHTML=Object.keys(stockLabels).map(k=>{const r=stockNow.items[k];const hasActivity=r.opening>0||r.harvest>0||r.need>0;const ok=!hasActivity||(r.shortage===0&&!r.belowMinimum);return `<p><b>${stockLabels[k]}:</b> ${fmt(r.closing)} ${r.unit} <span class="pill" style="${ok?'':'background:#743c32;color:#ffe5df'}">${!hasActivity?'NOCH NICHT ERFASST':r.shortage>0?'FEHLMENGE':r.belowMinimum?'MINDESTBESTAND':'OK'}</span></p>`}).join("");
+ const delivered=totals.milkDelivered, milkBalance=milkTankOpening+totals.milk-delivered;
+ document.getElementById("dashboardMilkTank").innerHTML=`<div class="kpi">${fmt(Math.max(0,milkBalance))} L</div><p>Startbestand: ${fmt(milkTankOpening)} L<br>Produziert: + ${fmt(totals.milk)} L<br>Ausgeliefert: − ${fmt(delivered)} L</p>${milkBalance<0?'<span class="pill" style="background:#743c32">Achtung: Liefermenge über Bestand</span>':'<span class="pill">Tankbestand berechnet</span>'}`;
+ updateMixer();
+ const tmrComponents=totals.straw+totals.hay+totals.silage;
+ let prod=[
+ ["TMR-Gesamtbedarf",totals.tmr,"–",0],
+ ["Stroh für TMR",totals.straw,"–",s.strawYield],
+ ["Heu für TMR",totals.hay,"–",s.hayYield],
+ ["Maissilage für TMR",totals.silage,"–",s.silageYield],
+ ["Einstreu-Stroh",totals.bales,totals.bales,s.strawYield]
+ ];
+ document.getElementById("productionTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th>Bedarfskategorie</th><th>Benötigte Menge</th></tr></thead><tbody>${prod.map(([n,b,ballen,y])=>`<tr><td>${n}</td><td><b>${n==="Einstreu-Stroh"?fmt(b)+" Ballen à "+fmt(bale)+" L":fmt(b)+" L"}</b></td></tr>`).join("")}</tbody></table></div>
+ <p><b>Gesamter ermittelter Bedarf:</b> ${fmt(totals.tmr)} L TMR. Die TMR setzt sich aus ${fmt(totals.straw)} L Stroh, ${fmt(totals.hay)} L Heu und ${fmt(totals.silage)} L Maissilage zusammen (insgesamt ${fmt(tmrComponents)} L). Für Einstreu werden zusätzlich <b>${fmt(totals.bales)} Ballen à ${fmt(bale)} L</b> benötigt.</p>
+ <p><b>Futterwagenbedarf:</b> ${fmt(totals.wagonsExact)} rechnerische Ladungen bzw. <b>${fmt(totals.wagonsRounded)} volle Wagen</b> à ${fmt(cap)} L pro Jahr.</p>`;
+ document.getElementById("factorySummary").innerHTML=`<div class="kpi">${fmt(totals.milk)} L</div><p>Jahresproduktion<br>Fabrikbedarf: <b>${fmt(totals.factory)} L</b><br>Deckung: <b>${totals.factory?(totals.milk/totals.factory*100).toFixed(1):0}%</b><br>Saldo: <b>${fmt(totals.milk-totals.factory)} L</b></p>`;
+ renderHarvest();
+ renderStock();
+
+ renderYearClose();
+ renderAnalysis();
+ if(save)persist();
+}
+function getHarvestForYear(year=val("year")){
+ const key=String(Math.max(1,Math.floor(Number(year)||1)));
+ let h=harvestData[key];
+ if(!Array.isArray(h)){
+   // Migration: retain previously entered single harvest values as one record.
+   if(h && typeof h==="object") h=[{id:Date.now(),label:"Bisherige Ernte",strawTmr:Number(h.straw)||0,beddingBales:0,hay:Number(h.hay)||0,silage:Number(h.silage)||0}];
+   else h=[];
+   harvestData[key]=h;
+ }
+ return h;
+}
+let nextHarvestId=1;
+function saveHarvestForYear(){
+ const y=String(Math.max(1,Math.floor(val("year"))));
+ const rows=document.querySelectorAll("#harvestRows [data-harvest-id]");
+ const list=getHarvestForYear(y);
+ rows.forEach(row=>{
+   const item=list.find(x=>String(x.id)===row.dataset.harvestId);
+   if(!item)return;
+   item.label=row.querySelector('[data-k="label"]').value.trim();
+   item.strawTmr=Math.max(0,Number(row.querySelector('[data-k="strawTmr"]').value)||0);
+   item.beddingBales=Math.max(0,Number(row.querySelector('[data-k="beddingBales"]').value)||0);
+   item.hay=Math.max(0,Number(row.querySelector('[data-k="hay"]').value)||0);
+   item.silage=Math.max(0,Number(row.querySelector('[data-k="silage"]').value)||0);
+ });
+ persist();renderHarvest();renderStock();renderAnalysis();
+}
+function addHarvest(){
+ const list=getHarvestForYear();
+ list.push({id:nextHarvestId++,label:"Ernte "+(list.length+1),strawTmr:0,beddingBales:0,hay:0,silage:0});
+ persist();renderHarvest();
+}
+function renderHarvest(){
+ const y=Math.max(1,Math.floor(val("year"))), list=getHarvestForYear(y), totals=list.reduce((a,h)=>{
+   a.strawTmr+=Number(h.strawTmr)||0;a.beddingBales+=Number(h.beddingBales)||0;
+   a.hay+=Number(h.hay)||0;a.silage+=Number(h.silage)||0;return a;
+ },{strawTmr:0,beddingBales:0,hay:0,silage:0});
+ const host=document.getElementById("harvestRows");
+ host.innerHTML=list.map((h,i)=>`<div class="card" data-harvest-id="${h.id}" style="margin:10px 0">
+ <h3>${String(h.label||"Ernte "+(i+1)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}</h3>
+ <div class="fields">
+ <div class="field"><label>Bezeichnung / Datum</label><input data-k="label" type="text" value="${String(h.label||"").replaceAll('"','&quot;')}"></div>
+ <div class="field"><label>Stroh für TMR (Liter)</label><input data-k="strawTmr" type="number" min="0" step="1" value="${Number(h.strawTmr)||0}"></div>
+ <div class="field"><label>Stroh für Einstreu (7.000-L-Ballen)</label><input data-k="beddingBales" type="number" min="0" step="1" value="${Number(h.beddingBales)||0}"></div>
+ <div class="field"><label>Heu geerntet (Liter)</label><input data-k="hay" type="number" min="0" step="1" value="${Number(h.hay)||0}"></div>
+ <div class="field"><label>Maissilage geerntet (Liter)</label><input data-k="silage" type="number" min="0" step="1" value="${Number(h.silage)||0}"></div>
+ </div><div class="actions"><button type="button" class="btn" data-delete-harvest="${h.id}">Ernte entfernen</button></div></div>`).join("");
+ host.querySelectorAll("input").forEach(el=>el.addEventListener("change",saveHarvestForYear));
+ host.querySelectorAll("[data-delete-harvest]").forEach(btn=>btn.addEventListener("click",()=>{
+   harvestData[String(y)]=getHarvestForYear(y).filter(x=>String(x.id)!==btn.dataset.deleteHarvest);
+   persist();renderHarvest();renderAnalysis();
+ }));
+ const t=calc().totals, needs={strawTmr:t.straw,beddingBales:t.bales,hay:t.hay,silage:t.silage};
+ const labels={strawTmr:"Stroh für TMR",beddingBales:"Stroh für Einstreu",hay:"Heu",silage:"Maissilage"};
+ const units={strawTmr:"L",beddingBales:"Ballen à 7.000 L",hay:"L",silage:"L"};
+ document.getElementById("harvestSummary").innerHTML=`<h3>Erntesumme – Betriebsjahr ${y}</h3>`+Object.keys(needs).map(k=>{
+   const harvested=totals[k],diff=harvested-needs[k];
+   return `<p><b>${labels[k]}:</b> Bedarf ${fmt(needs[k])} ${units[k]} · geerntet ${fmt(harvested)} ${units[k]} · <b>${diff>0?"Überschuss":diff<0?"Fehlmenge":"Bedarf gedeckt"}</b> – ${diff>0?fmt(diff)+" "+units[k]+" zu viel":diff<0?fmt(Math.abs(diff))+" "+units[k]+" zu wenig":"0 Differenz"}</p>`;
+ }).join("");
+ renderHarvestPlan(y,needs,totals);
+}
+const harvestPlanLabels={strawTmr:"Stroh für TMR",beddingBales:"Stroh für Einstreu",hay:"Heu",silage:"Maissilage"};
+const harvestPlanUnits={strawTmr:"L",beddingBales:"Ballen",hay:"L",silage:"L"};
+function renderHarvestPlan(year,needs,actual){
+ const key=String(year);const plan=harvestPlans[key]||{strawTmr:0,beddingBales:0,hay:0,silage:0};
+ document.getElementById("harvestPlan").innerHTML=`<div class="table-wrap"><table><thead><tr><th>Erntegut</th><th>Ernteziel (Soll)</th><th>Ist-Ernte</th><th>Bis zum Ziel</th><th>Fortschritt</th></tr></thead><tbody>${Object.keys(harvestPlanLabels).map(k=>{const target=Math.max(0,Number(plan[k])||0),done=actual[k]||0,remaining=Math.max(0,target-done),pct=target>0?Math.min(100,done/target*100):0;return `<tr><td><b>${harvestPlanLabels[k]}</b></td><td><input data-plan-k="${k}" type="number" min="0" step="1" value="${target}" aria-label="Ernteziel ${harvestPlanLabels[k]}" style="max-width:150px"></td><td>${fmt(done)} ${harvestPlanUnits[k]}</td><td>${fmt(remaining)} ${harvestPlanUnits[k]}</td><td><b>${target>0?fmt(pct)+" %":"kein Ziel gesetzt"}</b><div class="compare-track" style="margin-top:5px"><div class="harvest" style="width:${pct}%"></div></div></td></tr>`}).join("")}</tbody></table></div><p class="muted">Die Ernteziele werden getrennt je Betriebsjahr gespeichert. Eine Ist-Ernte wird aus allen Erntevorgängen dieses Jahres zusammengerechnet.</p>`;
+}
+function saveHarvestPlan(){const key=String(Math.max(1,Math.floor(val("year"))));const plan={...(harvestPlans[key]||{})};document.querySelectorAll("#harvestPlan [data-plan-k]").forEach(el=>plan[el.dataset.planK]=Math.max(0,Number(el.value)||0));harvestPlans[key]=plan;persist();renderHarvest();}
+function setHarvestPlanFromNeed(){const y=Math.max(1,Math.floor(val("year"))),t=calc().totals;harvestPlans[String(y)]={strawTmr:t.straw,beddingBales:t.bales,hay:t.hay,silage:t.silage};persist();renderHarvest();}
+const stockFields={openingStrawTmr:"strawTmr",openingBeddingBales:"beddingBales",openingHay:"hay",openingSilage:"silage",minimumStrawTmr:"minStrawTmr",minimumBeddingBales:"minBeddingBales",minimumHay:"minHay",minimumSilage:"minSilage"};
+function loadStockInputs(){
+ Object.entries(stockFields).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=Number(stockSettings[key])||0;});
+}
+function saveStockSettings(){
+ Object.entries(stockFields).forEach(([id,key])=>{const el=document.getElementById(id);if(el)stockSettings[key]=Math.max(0,Number(el.value)||0);});
+ persist();renderStock();renderAnalysis();
+}
+function yearlyNeed(year){
+ const source=Array.isArray(yearData[String(year)])?yearData[String(year)]:(Number(year)===Math.max(1,Math.floor(val("year")))?data:months.map(()=>({tmr:0,bedding:0,milkDelivered:0})));
+ const t=calc(source,getHerdForYear(year),getSettingsForYear(year)).totals;
+ return {strawTmr:t.straw,beddingBales:t.bales,hay:t.hay,silage:t.silage};
+}
+function yearlyHarvest(year){
+ return getHarvestForYear(year).reduce((a,h)=>{a.strawTmr+=Number(h.strawTmr)||0;a.beddingBales+=Number(h.beddingBales)||0;a.hay+=Number(h.hay)||0;a.silage+=Number(h.silage)||0;return a;},{strawTmr:0,beddingBales:0,hay:0,silage:0});
+}
+function buildStockLedger(untilYear=Math.max(1,Math.floor(val("year")))){
+ const names={strawTmr:"Stroh für TMR",beddingBales:"Stroh für Einstreu",hay:"Heu",silage:"Maissilage"};
+ const units={strawTmr:"L",beddingBales:"Ballen",hay:"L",silage:"L"};
+ const minKeys={strawTmr:"minStrawTmr",beddingBales:"minBeddingBales",hay:"minHay",silage:"minSilage"};
+ let stock={strawTmr:stockSettings.strawTmr,beddingBales:stockSettings.beddingBales,hay:stockSettings.hay,silage:stockSettings.silage};
+ const ledger=[];
+ for(let y=1;y<=untilYear;y++){
+   if(y>1&&yearClosures[String(y-1)]?.stock){Object.keys(stock).forEach(k=>{const prev=yearClosures[String(y-1)].stock[k];if(prev)stock[k]=Math.max(0,Number(prev.closing)||0);});}
+   const need=yearlyNeed(y),harvest=yearlyHarvest(y),row={year:y,items:{}};
+   Object.keys(names).forEach(k=>{
+     const opening=Math.max(0,Number(stock[k])||0),harvestQty=Math.max(0,Number(harvest[k])||0),needQty=Math.max(0,Number(need[k])||0);
+     const available=opening+harvestQty,shortage=Math.max(0,needQty-available),closing=Math.max(0,available-needQty),minimum=Math.max(0,Number(stockSettings[minKeys[k]])||0);
+     row.items[k]={name:names[k],unit:units[k],opening,harvest:harvestQty,need:needQty,available,closing,minimum,shortage,belowMinimum:closing<minimum};
+     stock[k]=closing;
+   });
+   ledger.push(row);
+ }
+ return ledger;
+}
+function yearsLeft(stock,annualNeed){
+ if(annualNeed<=0)return null;
+ if(stock<=0)return 0;
+ return stock/annualNeed;
+}
+function renderStock(){
+ const y=Math.max(1,Math.floor(val("year"))),ledger=buildStockLedger(y),current=ledger[ledger.length-1];
+ const labels={strawTmr:"TMR-Stroh",beddingBales:"Einstreu-Stroh",hay:"Heu",silage:"Maissilage"};
+ const items=Object.keys(labels);
+ const fmtYears=n=>n===null?"–":n===0?"0":fmt(n)+" Jahre";
+ document.getElementById("stockSummary").innerHTML=`<h3>Lagerbilanz – Betriebsjahr ${y}</h3><div class="table-wrap"><table><thead><tr><th>Produkt</th><th>Startbestand</th><th>Ernte hinzu</th><th>Jahresbedarf abgezogen</th><th>Restbestand</th><th>Reichweite</th><th>Status</th></tr></thead><tbody>${items.map(k=>{
+ const r=current.items[k],remaining=yearsLeft(Math.max(0,r.closing),r.need);
+ const hasActivity=r.opening>0||r.harvest>0||r.need>0;
+ const status=!hasActivity?"NOCH KEINE ERFASSUNG":r.shortage>0?"FEHLT":r.belowMinimum?"MINDESTBESTAND UNTERSCHRITTEN":"AUSREICHEND";
+ return `<tr><td>${labels[k]}</td><td>${fmt(r.opening)} ${r.unit}</td><td>+ ${fmt(r.harvest)} ${r.unit}</td><td>− ${fmt(r.need)} ${r.unit}</td><td><b>${fmt(r.closing)} ${r.unit}</b></td><td>${fmtYears(remaining)}</td><td><span class="pill" style="${r.shortage>0||r.belowMinimum?'background:#fde2e2;color:#9b2525':''}">${status}</span></td></tr>`;
+ }).join("")}</tbody></table></div><p class="muted">Die Reichweite berechnet sich aus dem Restbestand geteilt durch den Bedarf des ausgewählten Betriebsjahres. Sie ist eine Schätzung bei gleichbleibendem Verbrauch und ohne weitere Ernten.</p>`;
+ const alerts=items.map(k=>{const r=current.items[k],monthly=r.need/12,stock=Math.max(0,r.closing),runway=monthly>0?stock/monthly:null,reorder=Math.max(0,Math.max(r.minimum,monthly*3)-stock);return {label:labels[k],unit:r.unit,runway,reorder,short:r.shortage>0,low:r.belowMinimum&&(r.opening>0||r.harvest>0||r.need>0)};}).filter(a=>a.short||a.low||(a.runway!==null&&a.runway<2));
+ document.getElementById("stockAlerts").innerHTML=alerts.length?`<div class="note"><b>Lagerwarnungen</b>${alerts.map(a=>`<p>${a.label}: ${a.short?'Bestand reicht nicht aus':a.low?'Mindestbestand unterschritten':'geringe Reichweite'}${a.runway!==null?' · ca. '+fmt(a.runway)+' Monate':''}${a.reorder>0?' · Empfehlung für 3-Monats-Vorrat: '+fmt(a.reorder)+' '+a.unit:''}</p>`).join("")}</div>`:'<p class="compare-good">Alle Lagerbestände sind ausreichend.</p>';
+ document.getElementById("dashboardStock").innerHTML=items.map(k=>{const r=current.items[k];return `<p><b>${labels[k]}:</b> ${fmt(r.closing)} ${r.unit}</p>`}).join("");
+}
+function pieCard(title,parts,description){
+ const colors=["#78b83f","#e3bd43","#6e9fc2","#bd8050","#a78bc9"];
+ const total=parts.reduce((s,p)=>s+Math.max(0,Number(p.value)||0),0);
+ let offset=0, circles="";
+ if(total>0){
+   parts.forEach((part,i)=>{
+     const value=Math.max(0,Number(part.value)||0);
+     if(!value)return;
+     const pct=value/total*100, dash=pct*3.14159;
+     circles+=`<circle cx="60" cy="60" r="48" fill="none" stroke="${colors[i%colors.length]}" stroke-width="18" stroke-dasharray="${dash} ${301.592-dash}" stroke-dashoffset="${-offset*3.01592}" transform="rotate(-90 60 60)"/>`;
+     offset+=pct;
+   });
+ }else{
+   circles='<circle cx="60" cy="60" r="48" fill="none" stroke="#536052" stroke-width="18"/>';
+ }
+ const legend=parts.map((part,i)=>{
+   const value=Math.max(0,Number(part.value)||0),pct=total?value/total*100:0;
+   return `<div class="pie-legend-row"><span class="pie-key"><i class="pie-dot" style="background:${colors[i%colors.length]}"></i>${part.label}</span><b>${fmt(value)} ${part.unit||"L"} · ${pct.toFixed(1)}%</b></div>`;
+ }).join("");
+ return `<article class="pie-card"><h3>${title}</h3><div class="pie-layout"><svg class="pie-donut" viewBox="0 0 120 120" role="img" aria-label="${title}: ${parts.map(p=>p.label+" "+fmt(p.value)).join(", ")}"><circle cx="60" cy="60" r="48" fill="none" stroke="#344034" stroke-width="18"/>${circles}<text x="60" y="57" text-anchor="middle" fill="#f1f4ec" font-size="12" font-weight="700">${total?fmt(total):"0"}</text><text x="60" y="70" text-anchor="middle" fill="#b4c0b1" font-size="8">Gesamt</text></svg><div class="pie-legend">${legend||'<span class="muted">Keine Mengen erfasst</span>'}</div></div><p class="analysis-explain">${description||""}</p></article>`;
+}
+function setAnalysisMode(mode){
+ const chart=mode==="chart";
+ document.getElementById("analysisTextView").hidden=chart;
+ document.getElementById("analysisChartView").hidden=!chart;
+ document.getElementById("analysisTextBtn").classList.toggle("active",!chart);
+ document.getElementById("analysisChartBtn").classList.toggle("active",chart);
+ document.getElementById("analysisTextBtn").setAttribute("aria-pressed",String(!chart));
+ document.getElementById("analysisChartBtn").setAttribute("aria-pressed",String(chart));
+}
+function renderAnalysis(){
+ const sel=document.getElementById("analysisYear"); if(!sel)return;
+ const current=Math.max(1,Math.floor(val("year")));
+ const years=[...new Set([...Object.keys(yearData).map(Number).filter(n=>n>0),...Object.keys(yearHerdData).map(Number).filter(n=>n>0),current])].sort((a,b)=>a-b);
+ const previous=sel.value||"all";
+ sel.innerHTML='<option value="all">Gesamt – alle Betriebsjahre</option>'+years.map(y=>`<option value="${y}">Betriebsjahr ${y}</option>`).join("");
+ sel.value=previous==="all"||years.includes(Number(previous))?previous:String(current);
+ const chosen=sel.value, entries=chosen==="all"?years:[Number(chosen)];
+ const results=entries.map(y=>({year:y,...calc(Array.isArray(yearData[String(y)])?yearData[String(y)]:(y===current?data:emptyYearMonths()),getHerdForYear(y),getSettingsForYear(y))}));
+ const sum=key=>results.reduce((a,r)=>a+(Number(r.totals[key])||0),0);
+ const straw=sum("straw"),hay=sum("hay"),silage=sum("silage"),milk=sum("milk"),factory=sum("factory"),tmr=sum("tmr"),delivered=sum("milkDelivered"),bales=sum("bales");
+ const selectedYear=chosen==="all"?Math.max(...years,1):Number(chosen);
+ const ledger=buildStockLedger(selectedYear),selectedLedger=ledger[ledger.length-1];
+ const labels={strawTmr:"TMR-Stroh",beddingBales:"Einstreu-Ballen",hay:"Heu",silage:"Maissilage"};
+ const totalHarvest=entries.reduce((acc,y)=>{
+   const list=getHarvestForYear(y);
+   list.forEach(h=>{acc.strawTmr+=Number(h.strawTmr)||0;acc.beddingBales+=Number(h.beddingBales)||0;acc.hay+=Number(h.hay)||0;acc.silage+=Number(h.silage)||0;});
+   return acc;
+ },{strawTmr:0,beddingBales:0,hay:0,silage:0});
+ const harvestMap={strawTmr:totalHarvest.strawTmr,beddingBales:totalHarvest.beddingBales,hay:totalHarvest.hay,silage:totalHarvest.silage};
+ const totalsByYear=entries.map(y=>{
+   const r=results.find(x=>x.year===y);
+   const h=getHarvestForYear(y).reduce((a,x)=>({strawTmr:a.strawTmr+(Number(x.strawTmr)||0),beddingBales:a.beddingBales+(Number(x.beddingBales)||0),hay:a.hay+(Number(x.hay)||0),silage:a.silage+(Number(x.silage)||0)}),{strawTmr:0,beddingBales:0,hay:0,silage:0});
+   return {year:y,r,h};
+ });
+ const activeResult=results[0];
+ const enteredMonths=entries.reduce((n,y)=>n+(yearData[String(y)]||[]).filter(d=>(Number(d.tmr)||0)>0||(Number(d.bedding)||0)>0).length,0);
+ const missingHarvest=entries.filter(y=>getHarvestForYear(y).length===0).length;
+ const qualityNotes=[];
+ if(enteredMonths===0)qualityNotes.push("Noch keine monatlichen Verbrauchswerte erfasst.");
+ if(missingHarvest===entries.length)qualityNotes.push("Für den ausgewählten Zeitraum sind noch keine Ernten eingetragen.");
+ if(factory>0&&milk===0)qualityNotes.push("Es ist Fabrikbedarf eingetragen, aber keine Milchproduktion berechnet.");
+ document.getElementById("analysisSummary").innerHTML=`<div class="grid" style="margin-top:12px">
+ <div class="card span-3"><div class="kpi-label">Betriebsjahre</div><div class="kpi">${chosen==="all"?years.length:chosen}</div></div>
+ <div class="card span-3"><div class="kpi-label">TMR-Bedarf</div><div class="kpi">${fmt(tmr)} L</div></div>
+ <div class="card span-3"><div class="kpi-label">Milch produziert</div><div class="kpi">${fmt(milk)} L</div></div>
+ <div class="card span-3"><div class="kpi-label">Fabrikdeckung</div><div class="kpi">${factory?(milk/factory*100).toFixed(1):0} %</div></div></div>${qualityNotes.length?`<div class="note" style="margin-top:12px"><b>Prüfhinweise</b><ul>${qualityNotes.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:`<div class="note" style="margin-top:12px">Die Auswertung enthält erfasste Verbrauchs- und Produktionsdaten.</div>`}`;
+ const compareRows=totalsByYear.map(({year,r,h})=>{
+   const t=r.totals,s=r.s;
+   const needs={strawTmr:t.straw,beddingBales:t.bales,hay:t.hay,silage:t.silage};
+   const harvested={strawTmr:h.strawTmr,beddingBales:h.beddingBales,hay:h.hay,silage:h.silage};
+   const diffs=Object.keys(needs).map(k=>harvested[k]-needs[k]);
+   const balance=diffs.every(v=>v>=0);
+   return `<tr><td><b>Jahr ${year}</b><br><small>${r.rows[0]?.animals||0} Tiere zu Beginn</small></td>
+   <td>${fmt(t.tmr)} L</td><td>${fmt(needs.strawTmr)} L</td><td>${fmt(harvested.strawTmr)} L</td>
+   <td class="${diffs[0]>=0?'compare-good':'compare-bad'}">${diffs[0]>=0?'+':''}${fmt(diffs[0])} L</td>
+   <td>${fmt(needs.hay)} L</td><td>${fmt(harvested.hay)} L</td><td class="${diffs[2]>=0?'compare-good':'compare-bad'}">${diffs[2]>=0?'+':''}${fmt(diffs[2])} L</td>
+   <td>${fmt(needs.silage)} L</td><td>${fmt(harvested.silage)} L</td><td class="${diffs[3]>=0?'compare-good':'compare-bad'}">${diffs[3]>=0?'+':''}${fmt(diffs[3])} L</td>
+   <td>${fmt(needs.beddingBales)} Ballen</td><td>${fmt(harvested.beddingBales)} Ballen</td><td class="${diffs[1]>=0?'compare-good':'compare-bad'}">${diffs[1]>=0?'+':''}${fmt(diffs[1])} Ballen</td>
+   <td>${fmt(t.milk)} L</td><td>${fmt(t.factory)} L</td><td class="${t.milk>=t.factory?'compare-good':'compare-bad'}">${t.factory?(t.milk/t.factory*100).toFixed(0):0}%</td></tr>`;
+ }).join("");
+ document.getElementById("analysisCompare").innerHTML=`<div class="table-wrap"><table class="compare-table"><thead><tr><th>Betriebsjahr / Tiere</th><th>TMR-Bedarf</th><th>Strohbedarf</th><th>Stroh geerntet</th><th>Saldo</th><th>Heubedarf</th><th>Heu geerntet</th><th>Saldo</th><th>Silagebedarf</th><th>Silage geerntet</th><th>Saldo</th><th>Einstreu-Bedarf</th><th>Einstreu geerntet</th><th>Saldo</th><th>Milch produziert</th><th>Fabrikbedarf</th><th>Deckung</th></tr></thead><tbody>${compareRows}</tbody></table></div><p class="muted">Positive Salden bedeuten Ernteüberschuss, negative Salden eine Fehlmenge. Einstreu wird separat in Ballen verwaltet.</p>`;
+ const tankAvailable=milkTankOpening+milk,tankRemaining=tankAvailable-delivered;
+ document.getElementById("analysisNeed").innerHTML=`<p>Ausgewählter Zeitraum: <b>${chosen==="all"?"Alle Betriebsjahre":"Betriebsjahr "+chosen}</b></p>
+ <p>TMR-Gesamtbedarf: <b>${fmt(tmr)} L</b><br>Davon Stroh: <b>${fmt(straw)} L</b><br>Davon Heu: <b>${fmt(hay)} L</b><br>Davon Maissilage: <b>${fmt(silage)} L</b><br>Einstreu: <b>${fmt(bales)} Ballen</b></p>
+ <p>Ernte gesamt im Zeitraum:<br>Stroh TMR: <b>${fmt(harvestMap.strawTmr)} L</b><br>Heu: <b>${fmt(harvestMap.hay)} L</b><br>Maissilage: <b>${fmt(harvestMap.silage)} L</b><br>Einstreu: <b>${fmt(harvestMap.beddingBales)} Ballen</b></p>`;
+ document.getElementById("analysisMilk").innerHTML=`<p>Milchproduktion: <b>${fmt(milk)} L</b><br>Ausgeliefert: <b>${fmt(delivered)} L</b><br>Fabrikbedarf: <b>${fmt(factory)} L</b><br>Produktionssaldo: <b>${fmt(milk-factory)} L</b><br>Fabrikdeckung: <b>${factory?(milk/factory*100).toFixed(1):0} %</b></p>
+ <hr><p>Startbestand Milchtank: <b>${fmt(milkTankOpening)} L</b><br>+ Produktion: <b>${fmt(milk)} L</b><br>− Auslieferung: <b>${fmt(delivered)} L</b><br>Verbleibend: <b>${fmt(Math.max(0,tankRemaining))} L</b>${tankRemaining<0?'<br><b class="compare-bad">Achtung: Auslieferungen übersteigen den verfügbaren Bestand.</b>':""}</p>`;
+ document.getElementById("analysisStockText").innerHTML=`<p><b>Lagerbilanz – ${chosen==="all"?"letztes erfasstes Betriebsjahr":"Betriebsjahr "+chosen}</b></p>`+Object.keys(labels).map(k=>{
+   const r=selectedLedger.items[k],status=r.shortage>0?"Fehlmenge":r.belowMinimum?"Mindestbestand unterschritten":(r.opening||r.harvest||r.need)?"ausreichend":"noch nicht erfasst";
+   const reach=yearsLeft(Math.max(0,r.closing),r.need);
+   return `<div class="report-block"><p><b>${labels[k]}</b></p><p>Anfang ${fmt(r.opening)} ${r.unit} + Ernte ${fmt(r.harvest)} ${r.unit} − Bedarf ${fmt(r.need)} ${r.unit}</p><p><b>Restbestand: ${fmt(r.closing)} ${r.unit}</b></p><p>Status: <b>${status}</b> · Fehlmenge: ${fmt(r.shortage)} ${r.unit} · Reichweite: ${reach===null?"kein Verbrauch":fmt(reach)+" Jahre"}</p></div>`;
+ }).join("");
+ const stockCharts=Object.keys(labels).map(k=>{
+   const r=selectedLedger.items[k],used=Math.min(r.need,r.available),remaining=Math.max(0,r.closing);
+   return pieCard(labels[k]+" – Bedarf und Rest",[{label:"Verbrauch",value:used,unit:r.unit},{label:"Restbestand",value:remaining,unit:r.unit}],`Bilanz für ${chosen==="all"?"das letzte Betriebsjahr":"Betriebsjahr "+chosen}. Fehlmenge: ${fmt(r.shortage)} ${r.unit}.`);
+ });
+ document.getElementById("analysisCharts").innerHTML=[
+   pieCard("TMR-Zusammensetzung",[{label:"Stroh",value:straw},{label:"Heu",value:hay},{label:"Maissilage",value:silage}],"Anteile der drei Zutaten am gesamten TMR-Bedarf."),
+   pieCard("Milchbilanz",[{label:"Ausgeliefert",value:Math.min(delivered,Math.max(0,tankAvailable))},{label:"Restbestand",value:Math.max(0,tankRemaining)}],"Startbestand + Produktion − Auslieferungen."),
+   ...stockCharts
+ ].join("");
+ const barRows=totalsByYear.map(({year,r,h})=>{
+   const pairs=[["TMR-Stroh",r.totals.straw,h.strawTmr,"Bedarf","Ernte","demand","harvest"],["Heu",r.totals.hay,h.hay,"Bedarf","Ernte","demand","harvest"],["Maissilage",r.totals.silage,h.silage,"Bedarf","Ernte","demand","harvest"],["Milch",r.totals.milk,r.totals.factory,"Produktion","Fabrikbedarf","production","demand"]];
+   return `<div class="compare-bar-group"><h3>Betriebsjahr ${year}</h3>`+pairs.map(([name,need,produced,needLabel,prodLabel,needClass,prodClass])=>{
+     const scale=Math.max(1,need,produced);
+     return `<div class="compare-bar-row"><div class="compare-bar-label">${name} · ${needLabel}</div><div class="compare-track"><span class="${needClass}" style="width:${Math.min(100,need/scale*100)}%"></span></div><div class="compare-value">${fmt(need)} L</div></div>
+     <div class="compare-bar-row"><div class="compare-bar-label">${name} · ${prodLabel}</div><div class="compare-track"><span class="${prodClass}" style="width:${Math.min(100,produced/scale*100)}%"></span></div><div class="compare-value">${fmt(produced)} L</div></div>`;
+   }).join("")+`</div>`;
+ }).join("");
+ document.getElementById("analysisBars").innerHTML=`<div class="compare-legend"><span><i style="background:#b78343"></i>Bedarf</span><span><i style="background:#65a85b"></i>Ernte</span><span><i style="background:#438fbb"></i>Fabrikbedarf</span></div><div class="compare-bars">${barRows}</div>`;
+ setAnalysisMode(document.getElementById("analysisChartView").hidden?"text":"chart");
+}
+function isYearClosed(year=activeYear()){return !!yearClosures[String(year)];}
+function makeYearSnapshot(year=activeYear()){
+ const y=Number(year),result=calc(Array.isArray(yearData[String(y)])?yearData[String(y)]:data,getHerdForYear(y),getSettingsForYear(y));
+ const need=yearlyNeed(y),harvest=yearlyHarvest(y),ledger=buildStockLedger(y).slice(-1)[0];
+ return {year:y,closedAt:new Date().toISOString(),totals:result.totals,need,harvest,stock:ledger.items,months:(yearData[String(y)]||data).map(d=>({...d})),animalCount:getHerdForYear(y).length};
+}
+function closeBusinessYear(){
+ const y=activeYear();
+ if(yearClosures[y]){alert("Dieses Betriebsjahr ist bereits abgeschlossen.");return;}
+ if(!confirm("Betriebsjahr "+y+" verbindlich abschließen? Die Werte werden als Abschluss gespeichert und das Jahr wird gesperrt."))return;
+ saveActiveYearData(y);yearClosures[y]=makeYearSnapshot(y);persist();renderYearClose();applyYearLock();
+}
+function reopenBusinessYear(){
+ const y=activeYear();if(!yearClosures[y])return;
+ if(!confirm("Jahresabschluss für Betriebsjahr "+y+" wirklich aufheben? Das Jahr wird wieder bearbeitbar."))return;
+ delete yearClosures[y];persist();renderYearClose();applyYearLock();
+}
+function createNextBusinessYear(){
+ const current=Number(activeYear());
+ if(!yearClosures[String(current)]){alert("Bitte schließe zuerst das aktuelle Betriebsjahr ab.");return;}
+ if(!Number.isSafeInteger(current+1)){alert("Die maximal sicher darstellbare Betriebsjahresnummer wurde erreicht.");return;}
+ const next=String(current+1);
+ if(!yearInitialized[next])seedYearFromPrevious(Number(next));
+ document.getElementById("year").value=next;changeBusinessYear(next);
+}
+function renderYearClose(){
+ const y=activeYear(),snap=yearClosures[y],status=document.getElementById("yearCloseStatus");if(!status)return;
+ status.innerHTML=snap?`<p><b>Abgeschlossen:</b> ${new Date(snap.closedAt).toLocaleString("de-DE")} · ${snap.animalCount} Tiere · TMR ${fmt(snap.totals.tmr)} L · Milch ${fmt(snap.totals.milk)} L</p><p class="muted">Abschluss gespeichert. Das Betriebsjahr ist schreibgeschützt.</p>`:`<p class="muted">Betriebsjahr ${y} ist noch offen. Vor dem Abschluss bitte Monatswerte, Ernten und Lagerbestand prüfen.</p>`;
+ document.getElementById("closeYearBtn").disabled=!!snap;document.getElementById("reopenYearBtn").disabled=!snap;document.getElementById("createNextYearBtn").disabled=!snap;
+ document.getElementById("yearCloseReport").innerHTML=snap?`<div class="report-block"><h3>Abschlussbericht Betriebsjahr ${y}</h3><p>Tierbestand: <b>${snap.animalCount}</b><br>TMR-Verbrauch: <b>${fmt(snap.totals.tmr)} L</b><br>Stroh TMR: <b>${fmt(snap.need.strawTmr)} L</b><br>Heu: <b>${fmt(snap.need.hay)} L</b><br>Maissilage: <b>${fmt(snap.need.silage)} L</b><br>Einstreu: <b>${fmt(snap.need.beddingBales)} Ballen</b><br>Milchproduktion: <b>${fmt(snap.totals.milk)} L</b><br>Milch ausgeliefert: <b>${fmt(snap.totals.milkDelivered)} L</b></p><h3>Lager-Endbestand</h3>${Object.entries(snap.stock).map(([k,v])=>`<p>${v.name}: <b>${fmt(Math.max(0,v.closing))} ${v.unit}</b> · Fehlmenge ${fmt(v.shortage)} ${v.unit}</p>`).join("")}</div>`:"";
+}
+function applyYearLock(){
+ const closed=isYearClosed();
+ document.querySelectorAll("#master input,#master select,#master button,#months input,#months button,#harvest input,#harvest button").forEach(el=>{
+  if(["year","monthsYear","productionYear","harvestYear"].includes(el.id))return;
+  if(["backupExportBtn","backupImportBtn","reopenYearBtn","createNextYearBtn","closeYearBtn"].includes(el.id))return;
+  el.disabled=closed;
+ });
+}
+function printYearReport(){
+ const y=activeYear(),snap=yearClosures[y]||makeYearSnapshot(y);
+ const rows=Object.entries(snap.stock||{}).map(([k,v])=>`<tr><td>${escapeHtml(v.name)}</td><td>${fmt(v.opening)} ${v.unit}</td><td>${fmt(v.harvest)} ${v.unit}</td><td>${fmt(v.need)} ${v.unit}</td><td>${fmt(Math.max(0,v.closing))} ${v.unit}</td><td>${fmt(v.shortage)} ${v.unit}</td></tr>`).join("");
+ const needs=[ ["TMR-Stroh",snap.need.strawTmr||0,snap.harvest.strawTmr||0,"L"],["Heu",snap.need.hay||0,snap.harvest.hay||0,"L"],["Maissilage",snap.need.silage||0,snap.harvest.silage||0,"L"],["Einstreu-Stroh",snap.need.beddingBales||0,snap.harvest.beddingBales||0,"Ballen"] ];
+ const html=`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Jahresbericht ${y}</title><style>body{font:14px Arial,sans-serif;color:#172019;margin:28px}h1,h2{color:#315b2b}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border:1px solid #bbb;padding:8px;text-align:left}th{background:#e9f0e4}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.box{border:1px solid #bbb;padding:12px;border-radius:8px}.muted{color:#555}@media print{button{display:none}}</style></head><body><h1>LS25 · Wasserbüffel-Hofmanager</h1><h2>Jahresbericht Betriebsjahr ${y}</h2><p class="muted">Erstellt am ${new Date().toLocaleString("de-DE")}${yearClosures[y]?' · Jahresabschluss gespeichert':' · Vorschau, Jahr noch nicht abgeschlossen'}</p><div class="kpis"><div class="box"><b>Tierbestand</b><h2>${snap.animalCount}</h2></div><div class="box"><b>TMR-Verbrauch</b><h2>${fmt(snap.totals.tmr)} L</h2></div><div class="box"><b>Milchproduktion</b><h2>${fmt(snap.totals.milk)} L</h2></div><div class="box"><b>Milch ausgeliefert</b><h2>${fmt(snap.totals.milkDelivered)} L</h2></div></div><h2>Bedarf und Ernte</h2><table><tr><th>Produkt</th><th>Jahresbedarf</th><th>Ernte</th><th>Saldo Ernte − Bedarf</th></tr>${needs.map(([name,need,harvest,unit])=>`<tr><td>${name}</td><td>${fmt(need)} ${unit}</td><td>${fmt(harvest)} ${unit}</td><td>${fmt(harvest-need)} ${unit}</td></tr>`).join("")}</table><h2>Lagerabschluss</h2><table><tr><th>Produkt</th><th>Anfang</th><th>Ernte</th><th>Verbrauch</th><th>Endbestand</th><th>Fehlmenge</th></tr>${rows}</table><p class="muted">Dieser Bericht zeigt die erfassten Betriebsdaten. Milchmengen dienen der Produktions- und Lieferübersicht; eine Preis- oder Umsatzberechnung ist nicht enthalten.</p><button onclick="window.print()">Drucken / Als PDF speichern</button><script>setTimeout(()=>window.print(),500)<\/script></body></html>`;
+ const w=window.open("","_blank");if(!w){alert("Bitte Pop-ups für diese App erlauben, um den PDF-Bericht zu erstellen.");return;}w.document.open();w.document.write(html);w.document.close();
+}
+
+const expenseMonths=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+let expensePhotoData="";
+let expenseOcrLoaded=null;
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function euro(n){return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(Number(n)||0)}
+function expenseYearFromDate(date){const d=new Date(date+"T12:00:00");return Number.isFinite(d.getTime())?d.getFullYear():new Date().getFullYear()}
+function renderExpenses(){
+ const yf=document.getElementById("expenseYearFilter"),mf=document.getElementById("expenseMonthFilter");
+ if(!yf)return;
+ const old=yf.value||"all";
+ const years=[...new Set([new Date().getFullYear(),...operatingExpenses.map(e=>Number(e.year)||expenseYearFromDate(e.date))])].sort((a,b)=>b-a);
+ yf.innerHTML='<option value="all">Alle Betriebsjahre</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join("");
+ yf.value=old==="all"||years.includes(Number(old))?old:String(new Date().getFullYear());
+ const chosenYear=yf.value,chosenMonth=mf.value;
+ const filtered=operatingExpenses.filter(e=>(chosenYear==="all"||Number(e.year)===Number(chosenYear))&&(chosenMonth==="all"||Number(e.month)===Number(chosenMonth))).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b.id-a.id);
+ const total=filtered.reduce((a,e)=>a+(Number(e.amount)||0),0);
+ const monthCount=new Set(filtered.map(e=>e.date?.slice(0,7)).filter(Boolean)).size;
+ document.getElementById("expenseKpis").innerHTML=`<div class="expense-kpi"><small>Gesamtkosten</small><strong>${euro(total)}</strong></div><div class="expense-kpi"><small>Einzelbuchungen</small><strong>${filtered.length}</strong></div><div class="expense-kpi"><small>Monate mit Buchungen</small><strong>${monthCount}</strong></div><div class="expense-kpi"><small>Durchschnitt je Buchung</small><strong>${euro(filtered.length?total/filtered.length:0)}</strong></div>`;
+ const byCat={},byPosition={};
+ filtered.forEach(e=>{
+  const cat=e.category||"Sonstige (Altbuchung)",position=e.position||e.category||"Sonstige (Altbuchung)",amount=Number(e.amount)||0;
+  byCat[cat]=(byCat[cat]||0)+amount;
+  if(!byPosition[position])byPosition[position]={amount:0,count:0,category:cat};
+  byPosition[position].amount+=amount;byPosition[position].count++;
+ });
+ const sorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]),max=Math.max(1,...sorted.map(x=>x[1]));
+ document.getElementById("expenseCategoryBreakdown").innerHTML=sorted.length?'<h3 style="margin-top:18px">Zusammenfassung nach Hauptkategorie</h3>'+sorted.map(([cat,amount])=>`<div class="expense-bar"><b>${escapeHtml(cat)}</b><div class="expense-bar-track"><div class="expense-bar-fill" style="width:${amount/max*100}%"></div></div><span>${euro(amount)}</span></div>`).join(""):'<p class="muted">Für diese Auswahl sind noch keine Betriebskosten erfasst.</p>';
+ const positions=Object.entries(byPosition).sort((a,b)=>b[1].amount-a[1].amount),pmax=Math.max(1,...positions.map(x=>x[1].amount));
+ document.getElementById("expensePositionBreakdown").innerHTML=positions.length?`<h3 style="margin-top:20px">Einzelpositionen – ${chosenMonth==="all"?"Zeitraum gesamt":"Monatsauswertung"}</h3><div class="table-wrap"><table><thead><tr><th>Einzelposition</th><th>Hauptkategorie</th><th>Buchungen</th><th>Gesamtkosten</th><th>Anteil</th></tr></thead><tbody>${positions.map(([position,v])=>`<tr><td><b>${escapeHtml(position)}</b></td><td>${escapeHtml(v.category)}</td><td>${v.count}</td><td><b>${euro(v.amount)}</b></td><td>${total?(v.amount/total*100).toFixed(1):"0,0"} %</td></tr>`).join("")}</tbody></table></div>`:"";
+ let monthlyHtml="";
+ if(chosenYear!=="all"&&chosenMonth==="all"){
+  const monthly=Array.from({length:12},(_,i)=>({month:i+1,total:0,byPosition:{}}));
+  filtered.forEach(e=>{const m=Number(e.month)||Number((e.date||"").slice(5,7));if(m>=1&&m<=12){const pos=e.position||e.category||"Sonstige Betriebsausgabe";monthly[m-1].total+=Number(e.amount)||0;monthly[m-1].byPosition[pos]=(monthly[m-1].byPosition[pos]||0)+(Number(e.amount)||0)}});
+  monthlyHtml='<h3 style="margin-top:20px">Monatsübersicht im ausgewählten Jahr</h3><div class="table-wrap"><table><thead><tr><th>Monat</th><th>Gesamtkosten</th><th>Teuerste Einzelposition</th></tr></thead><tbody>'+monthly.map(m=>{const top=Object.entries(m.byPosition).sort((a,b)=>b[1]-a[1])[0];return `<tr><td>${months[m.month-1]}</td><td><b>${euro(m.total)}</b></td><td>${top?`${escapeHtml(top[0])}: ${euro(top[1])}`:"–"}</td></tr>`}).join("")+'</tbody></table></div>';
+ }
+ document.getElementById("expenseMonthlyBreakdown").innerHTML=monthlyHtml;
+ document.getElementById("expenseRows").innerHTML=filtered.length?filtered.map(e=>`<div class="expense-row"><div><b>${escapeHtml(e.date||"")}</b><small>${escapeHtml(e.vendor||"")}</small></div><div><b>${escapeHtml(e.position||e.category||"")}</b><small>${escapeHtml(e.category||"")}</small><small>${escapeHtml(e.description||"")}</small>${e.reference?`<small>${escapeHtml(e.reference)}</small>`:""}</div><div><b>${euro(e.amount)}</b></div><div>${e.photo?`<img class="expense-thumb" src="${e.photo}" alt="Belegfoto">`:""}</div><div class="expense-action"><button class="btn" data-expense-edit="${e.id}" type="button">Bearbeiten</button> <button class="btn" data-expense-delete="${e.id}" type="button">Löschen</button></div></div>`).join(""):'<p class="muted">Noch keine Kostenbuchungen vorhanden.</p>';
+ document.querySelectorAll("[data-expense-delete]").forEach(b=>b.addEventListener("click",()=>{if(!confirm("Diese Kostenbuchung wirklich löschen?"))return;operatingExpenses=operatingExpenses.filter(x=>x.id!==Number(b.dataset.expenseDelete));persist();renderExpenses()}));
+ document.querySelectorAll("[data-expense-edit]").forEach(b=>b.addEventListener("click",()=>{const e=operatingExpenses.find(x=>x.id===Number(b.dataset.expenseEdit));if(!e)return;document.getElementById("expenseDate").value=e.date||"";document.getElementById("expenseCategory").value=e.category||"Sonstiges";document.getElementById("expenseDescription").value=e.description||"";document.getElementById("expenseAmount").value=e.amount||"";document.getElementById("expenseVendor").value=e.vendor||"";document.getElementById("expenseReference").value=e.reference||"";expensePhotoData=e.photo||"";document.getElementById("expenseFormMsg").textContent="Bearbeitungsmodus: Speichern legt eine aktualisierte Buchung an; die alte Buchung bitte anschließend löschen.";document.getElementById("expensePhotoPreview").innerHTML=expensePhotoData?`<img class="expense-thumb" src="${expensePhotoData}" alt="Ausgewählter Beleg">`:"";document.getElementById("expenseSaveBtn").dataset.editId=e.id;showTab("expenses");}));
+}
+function clearExpenseForm(){["expenseDescription","expenseAmount","expenseVendor","expenseReference","expenseOcrText"].forEach(id=>document.getElementById(id).value="");document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseCategory").value="Laufende Fahrzeugkosten";expensePhotoData="";document.getElementById("expensePhoto").value="";document.getElementById("expensePhotoPreview").innerHTML="";document.getElementById("expenseSaveBtn").dataset.editId="";document.getElementById("expenseFormMsg").textContent=""}
+function compressExpenseImage(file){
+ return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{const scale=Math.min(1,700/Math.max(img.width,img.height)),canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL("image/jpeg",.48))};img.src=reader.result};reader.readAsDataURL(file)});
+}
+async function loadExpenseOcr(){
+ if(expenseOcrLoaded)return expenseOcrLoaded;
+ expenseOcrLoaded=new Promise((resolve,reject)=>{const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";script.onload=()=>resolve(window.Tesseract);script.onerror=()=>reject(new Error("OCR-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen."));document.head.appendChild(script)});
+ return expenseOcrLoaded;
+}
+function suggestExpenseFromText(text){
+ const amountMatches=[...text.matchAll(/(?:€|EUR)\s*([0-9]{1,3}(?:[.\s][0-9]{3})*(?:[,\.][0-9]{2})?)|([0-9]{1,3}(?:[.\s][0-9]{3})*[,\.][0-9]{2})\s*(?:€|EUR)/gi)];
+ const raw=amountMatches.map(m=>m[1]||m[2]).filter(Boolean);
+ const amounts=raw.map(v=>Number(v.replace(/\s/g,"").replace(/\./g,"").replace(",", "."))).filter(n=>Number.isFinite(n)&&n>0);
+ if(amounts.length){document.getElementById("expenseAmount").value=Math.max(...amounts).toFixed(2);document.getElementById("expenseFormMsg").textContent=`Betragsvorschlag ${euro(Math.max(...amounts))} erkannt. Bitte prüfen – bei mehreren Summen kann der größte Wert auch ein Kontostand sein.`}
+ const dateMatch=text.match(/\b(0?[1-9]|[12]\d|3[01])[./-](0?[1-9]|1[0-2])[./-](20\d{2})\b/);
+ if(dateMatch)document.getElementById("expenseDate").value=`${dateMatch[3]}-${dateMatch[2].padStart(2,"0")}-${dateMatch[1].padStart(2,"0")}`;
+}
+async function runExpenseOcr(){
+ const status=document.getElementById("expenseOcrStatus");
+ if(!expensePhotoData){status.textContent="Bitte zuerst ein Foto auswählen.";return}
+ const btn=document.getElementById("expenseOcrBtn");btn.disabled=true;status.textContent="Texterkennung wird geladen …";
+ try{
+  const Tesseract=await loadExpenseOcr();status.textContent="Foto wird gelesen …";
+  const result=await Tesseract.recognize(expensePhotoData,"deu+eng",{logger:m=>{if(m.status==="recognizing text")status.textContent=`Texterkennung: ${Math.round((m.progress||0)*100)} %`;}});
+  const txt=result.data.text||"";document.getElementById("expenseOcrText").value=txt;suggestExpenseFromText(txt);
+  status.textContent=txt.trim()?"Texterkennung abgeschlossen. Werte bitte kontrollieren.":"Kein lesbarer Text erkannt. Betrag bitte manuell eintragen.";
+ }catch(err){status.textContent=err.message||"Texterkennung fehlgeschlagen."}finally{btn.disabled=false}
+}
+async function chooseExpensePhoto(file){
+ if(!file)return;
+ try{expensePhotoData=await compressExpenseImage(file);document.getElementById("expensePhotoPreview").innerHTML=`<img class="expense-thumb" src="${expensePhotoData}" alt="Vorschau des Spiel-Screenshots">`;document.getElementById("expenseOcrStatus").textContent="Bild bereit. Jetzt Texterkennung starten."}
+ catch(e){document.getElementById("expenseOcrStatus").textContent="Bild konnte nicht verarbeitet werden."}
+}
+function saveExpense(){
+ const date=document.getElementById("expenseDate").value,amount=Number(document.getElementById("expenseAmount").value);
+ if(!date||!Number.isFinite(amount)||amount<=0){document.getElementById("expenseFormMsg").textContent="Bitte Datum und einen Betrag größer als 0 eingeben.";return}
+ const id=Number(document.getElementById("expenseSaveBtn").dataset.editId)||nextExpenseId++;
+ const entry={id,date,year:expenseYearFromDate(date),month:Number(date.slice(5,7)),category:document.getElementById("expenseCategory").value,position:document.getElementById("expenseCategory").value,description:document.getElementById("expenseDescription").value.trim(),amount,vendor:document.getElementById("expenseVendor").value.trim(),reference:document.getElementById("expenseReference").value.trim(),photo:expensePhotoData};
+ const idx=operatingExpenses.findIndex(e=>e.id===id);if(idx>=0)operatingExpenses[idx]=entry;else operatingExpenses.push(entry);
+ persist();renderExpenses();clearExpenseForm();document.getElementById("expenseFormMsg").textContent="Betriebskosten gespeichert.";
+}
+function exportExpenseCsv(){
+ const yf=document.getElementById("expenseYearFilter").value,mf=document.getElementById("expenseMonthFilter").value;
+ const rows=operatingExpenses.filter(e=>(yf==="all"||Number(e.year)===Number(yf))&&(mf==="all"||Number(e.month)===Number(mf)));
+ const csv="\uFEFF"+[["Datum","Betriebsjahr","Monat","Kategorie","Beschreibung","Händler","Betrag EUR","Notiz"],...rows.map(e=>[e.date,e.year,expenseMonths[(e.month||1)-1],e.category,e.description,e.vendor,e.amount,e.reference])].map(r=>r.map(v=>'"'+String(v??"").replaceAll('"','""')+'"').join(";")).join("\r\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="LS25_Betriebskosten_"+(yf==="all"?"alle_Jahre":yf)+(mf==="all"?"":"_Monat_"+mf)+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function printExpenseReport(){
+ const yf=document.getElementById("expenseYearFilter").value,mf=document.getElementById("expenseMonthFilter").value;
+ const rows=operatingExpenses.filter(e=>(yf==="all"||Number(e.year)===Number(yf))&&(mf==="all"||Number(e.month)===Number(mf)));
+ const total=rows.reduce((a,e)=>a+(Number(e.amount)||0),0),cats={};rows.forEach(e=>cats[e.category]=(cats[e.category]||0)+(Number(e.amount)||0));
+ const html=`<!doctype html><html lang="de"><meta charset="utf-8"><title>Betriebskostenbericht</title><style>body{font:14px Arial;margin:28px;color:#222}table{width:100%;border-collapse:collapse}td,th{border:1px solid #bbb;padding:7px;text-align:left}th{background:#e8eee5}</style><h1>LS25 – Betriebskostenbericht</h1><p>Zeitraum: ${yf==="all"?"Alle Betriebsjahre":"Betriebsjahr "+yf} · ${mf==="all"?"Gesamtes Jahr":expenseMonths[Number(mf)-1]}</p><h2>Gesamtkosten: ${euro(total)}</h2><h3>Nach Kostenart</h3><table><tr><th>Kategorie</th><th>Summe</th></tr>${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${euro(v)}</td></tr>`).join("")}</table><h3>Einzelbuchungen</h3><table><tr><th>Datum</th><th>Hauptkategorie</th><th>Einzelposition</th><th>Beschreibung</th><th>Händler</th><th>Betrag</th></tr>${rows.map(e=>`<tr><td>${escapeHtml(e.date||"")}</td><td>${escapeHtml(e.category||"")}</td><td>${escapeHtml(e.position||e.category||"")}</td><td>${escapeHtml(e.description||"")}</td><td>${escapeHtml(e.vendor||"")}</td><td>${euro(e.amount)}</td></tr>`).join("")}</table><script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></html>`;
+ const w=window.open("","_blank");if(!w){alert("Bitte Pop-ups erlauben, um den Kostenbericht als PDF zu speichern.");return}w.document.open();w.document.write(html);w.document.close();
+}
+
+function showTab(tab){
+ const valid=["dashboard","master","months","production","harvest","expenses","analysis"].includes(tab)?tab:"dashboard";
+ document.querySelectorAll("nav button[data-tab]").forEach(b=>{
+   const active=b.dataset.tab===valid;
+   b.classList.toggle("active",active);
+   b.setAttribute("aria-pressed",active?"true":"false");
+ });
+ document.querySelectorAll(".panel").forEach(panel=>panel.classList.toggle("active",panel.id===valid));
+}
+document.querySelector("nav").addEventListener("click",e=>{
+ const b=e.target.closest("button[data-tab]");
+ if(!b)return;
+ e.preventDefault();
+ showTab(b.dataset.tab);
+});
+window.addEventListener("hashchange",()=>showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1)||"dashboard");
+window.addEventListener("error",e=>{
+ const box=document.getElementById("appError");
+ if(box){box.hidden=false;box.textContent="Programmfehler: "+(e.message||"Unbekannter Fehler")+". Bitte die Datei vollständig herunterladen und in Chrome öffnen.";}
+});
+document.getElementById("analysisYear").addEventListener("change",renderAnalysis);
+document.getElementById("analysisTextBtn").addEventListener("click",()=>setAnalysisMode("text"));
+document.getElementById("analysisChartBtn").addEventListener("click",()=>setAnalysisMode("chart"));
+function changeBusinessYear(requested){
+ const yearInput=document.getElementById("year");
+ const oldKey=String(Math.max(1,Math.floor(Number(yearInput.dataset.previous)||1)));
+ const newKey=String(Math.max(1,Math.floor(Number(requested)||1)));
+ if(newKey===oldKey){syncYearSelectors();return;}
+ saveActiveYearData(oldKey);
+ if(!yearInitialized[newKey]){
+   seedYearFromPrevious(Number(newKey));
+ }else{
+   if(!Array.isArray(yearData[newKey]))yearData[newKey]=emptyYearMonths();
+   if(!Array.isArray(yearHerdData[newKey]))yearHerdData[newKey]=[];
+   if(!yearSettings[newKey])yearSettings[newKey]={...defaults,year:Number(newKey)};
+ }
+ yearInput.value=newKey;
+ data=yearData[newKey].map(d=>({
+  tmr:Math.max(0,Number(d?.tmr)||0),
+  bedding:Math.max(0,Number(d?.bedding)||0),
+  milkDelivered:Math.max(0,Number(d?.milkDelivered)||0)
+ }));
+ yearData[newKey]=data.map(d=>({...d}));
+ herd=(yearHerdData[newKey]||[]).map(a=>({...a}));
+ applyYearSettings(newKey);
+ yearInput.dataset.previous=newKey;
+ refreshYearOptions(newKey);
+ renderHerd();renderMonths();renderAll();persist();applyYearLock();
+}
+["year","monthsYear","productionYear","harvestYear"].forEach(id=>{
+ const el=document.getElementById(id);
+ if(el)el.addEventListener("change",()=>changeBusinessYear(el.value));
+});
+document.getElementById("year").dataset.previous=String(Math.max(1,Math.floor(val("year"))));
+ids.forEach(id=>document.getElementById(id).addEventListener("input",()=>renderAll()));
+document.getElementById("milkTankOpening").addEventListener("change",e=>{milkTankOpening=Math.max(0,Number(e.target.value)||0);persist();renderAll()});
+document.getElementById("mixerLoads").addEventListener("input",updateMixer);
+document.getElementById("saveBtn").addEventListener("click",()=>{persist();document.getElementById("saveMsg").textContent="Einstellungen gespeichert.";renderAll()});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+ if(!confirm("Wirklich alle gespeicherten Hofdaten, Ernten und Lagerbestände zurücksetzen?"))return;
+ ids.forEach(id=>document.getElementById(id).value=defaults[id]);
+ data=months.map(()=>({tmr:0,bedding:0,milkDelivered:0}));yearData={};yearHerdData={};yearSettings={};yearInitialized={};harvestData={};harvestPlans={};yearClosures={};operatingExpenses=[];nextExpenseId=1;
+ stockSettings={strawTmr:0,beddingBales:0,hay:0,silage:0,minStrawTmr:0,minBeddingBales:0,minHay:0,minSilage:0};milkTankOpening=0;document.getElementById("milkTankOpening").value=0;
+ loadStockInputs();
+ nextAnimalId=1;nextHarvestId=1;
+ yearData[String(Math.max(1,Math.floor(val("year"))))]=data;
+ herd=Array.from({length:20},()=>({id:nextAnimalId++,age:24,milkStarted:true,firstMilkAge:24}));
+ yearHerdData[activeYear()]=herd.map(a=>({...a}));yearSettings[activeYear()]=getSettings();yearInitialized[activeYear()]=true;refreshYearOptions(activeYear());syncYearSelectors();document.getElementById("year").dataset.previous=activeYear();
+ renderHerd();renderMonths();renderAll();persist();
+ document.getElementById("saveMsg").textContent="Beispieldaten geladen. Alle vorherigen Hofdaten wurden zurückgesetzt.";
+});
+document.getElementById("addAnimalBtn").addEventListener("click",()=>{
+ const id=nextAnimalId++;herd.push({id,age:0,startMonth:1,milkStarted:false,firstMilkAge:null});
+ renderHerd();renderAll();
+});
+document.getElementById("updateBtn").addEventListener("click",()=>renderAll());
+document.getElementById("addHarvestBtn").addEventListener("click",addHarvest);
+document.getElementById("closeYearBtn").addEventListener("click",closeBusinessYear);
+document.getElementById("reopenYearBtn").addEventListener("click",reopenBusinessYear);
+document.getElementById("createNextYearBtn").addEventListener("click",createNextBusinessYear);
+document.getElementById("printYearReportBtn").addEventListener("click",printYearReport);
+document.getElementById("expensePhoto").addEventListener("change",e=>chooseExpensePhoto(e.target.files?.[0]));
+document.getElementById("expenseOcrBtn").addEventListener("click",runExpenseOcr);
+document.getElementById("expenseSaveBtn").addEventListener("click",saveExpense);
+document.getElementById("expenseClearBtn").addEventListener("click",clearExpenseForm);
+document.getElementById("expenseYearFilter").addEventListener("change",renderExpenses);
+document.getElementById("expenseMonthFilter").addEventListener("change",renderExpenses);
+document.getElementById("expenseCsvBtn").addEventListener("click",exportExpenseCsv);
+document.getElementById("expensePrintBtn").addEventListener("click",printExpenseReport);
+document.getElementById("saveHarvestPlanBtn").addEventListener("click",saveHarvestPlan);
+document.getElementById("harvestPlanFromNeedBtn").addEventListener("click",setHarvestPlanFromNeed);
+document.getElementById("saveStockBtn").addEventListener("click",saveStockSettings);
+document.getElementById("csvBtn").addEventListener("click",()=>{
+ const {rows}=calc(),head=["Monat","Tiere","Durchschnittsalter Monate","TMR L","Einstreu L","Stroh TMR L","Heu L","Maissilage L","Futterwagen rechnerisch","Milchproduktion L","Milch ausgeliefert L","Fabrikbedarf L","Fabrikdeckung","Einstreuballen"];
+ const lines=[head,...rows.map(r=>[r.month,r.animals,r.age,r.tmr,r.bedding,r.straw,r.hay,r.silage,r.wag,r.milk,r.milkDelivered,r.factory,(r.coverage*100).toFixed(1)+"%",r.bales])];
+ const csv="\\uFEFF"+lines.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(";")).join("\\r\\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="LS25_Betriebsjahr_"+activeYear()+"_Monatsplanung.csv";a.click();URL.revokeObjectURL(a.href);
+});
+function exportBackup(){
+ const backup={format:"LS25-Wasserbueffel-Backup",version:14,createdAt:new Date().toISOString(),
+ settings:{...getSettings(),year:Number(activeYear())},months:data,yearData,yearHerdData,yearSettings,yearInitialized,harvestData,harvestPlans,yearClosures,operatingExpenses,nextExpenseId,stockSettings,herd,nextAnimalId,nextHarvestId,milkTankOpening};
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;
+ a.download="LS25_Wasserbueffel_Backup_"+new Date().toISOString().slice(0,10)+".json";a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ document.getElementById("backupMsg").textContent="Backup wurde erstellt. Bewahre die JSON-Datei sicher auf.";
+}
+function importBackup(file){
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const b=JSON.parse(reader.result);
+   if(!b||!b.settings||!Array.isArray(b.herd)||!b.yearData||!b.harvestData)throw new Error("Die Datei ist kein gültiges LS25-Backup.");
+   ids.forEach(id=>{if(b.settings[id]!==undefined)document.getElementById(id).value=b.settings[id]});
+   if(b.settings.year)document.getElementById("year").value=b.settings.year;
+   yearData=b.yearData;yearHerdData=b.yearHerdData||{};yearSettings=b.yearSettings||{};yearInitialized=b.yearInitialized||{};if(!Object.keys(yearHerdData).length){Object.keys(yearData).forEach(k=>yearHerdData[k]=b.herd.map(a=>({...a})));}harvestData=b.harvestData;harvestPlans=b.harvestPlans||{};feedPlans=b.feedPlans||{};yearClosures=b.yearClosures||{};operatingExpenses=Array.isArray(b.operatingExpenses)?b.operatingExpenses:[];nextExpenseId=Number(b.nextExpenseId)||Math.max(0,...operatingExpenses.map(x=>Number(x.id)||0))+1;stockSettings={...stockSettings,...(b.stockSettings||{})};
+   herd=b.herd;nextAnimalId=Number(b.nextAnimalId)||Math.max(0,...herd.map(a=>Number(a.id)||0))+1;
+   nextHarvestId=Number(b.nextHarvestId)||1;milkTankOpening=Math.max(0,Number(b.milkTankOpening)||0);
+   document.getElementById("milkTankOpening").value=milkTankOpening;
+   const current=String(Math.max(1,Math.floor(val("year"))));
+   data=Array.isArray(yearData[current])?yearData[current]:(Array.isArray(b.months)?b.months:months.map(()=>({tmr:0,bedding:0,milkDelivered:0})));
+   yearData[current]=data;if(!yearHerdData[current])yearHerdData[current]=herd.map(a=>({...a}));if(!yearSettings[current])yearSettings[current]={...defaults,...getSettings(),year:Number(current)};if(!yearInitialized[current])yearInitialized[current]=true;applyYearSettings(current);refreshYearOptions(current);document.getElementById("year").dataset.previous=current;herd=(yearHerdData[current]||[]).map(a=>({...a}));loadStockInputs();renderHerd();renderMonths();renderAll();persist();
+   document.getElementById("backupMsg").textContent="Backup erfolgreich importiert.";
+  }catch(err){document.getElementById("backupMsg").textContent="Import fehlgeschlagen: "+err.message;}
+ };
+ reader.readAsText(file);
+}
+document.getElementById("backupExportBtn").addEventListener("click",exportBackup);
+document.getElementById("backupImportBtn").addEventListener("click",()=>document.getElementById("backupFile").click());
+document.getElementById("backupFile").addEventListener("change",e=>{if(e.target.files&&e.target.files[0])importBackup(e.target.files[0]);e.target.value="";});
+document.getElementById("mixerLoads").value=1;
+load();document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);renderExpenses();refreshYearOptions(activeYear());syncYearSelectors();document.getElementById("year").dataset.previous=activeYear();syncYearSelectors();data=data.map(d=>({...{tmr:0,bedding:0,milkDelivered:0},...d}));Object.keys(yearData).forEach(k=>{if(Array.isArray(yearData[k]))yearData[k]=yearData[k].map(d=>({...{tmr:0,bedding:0,milkDelivered:0},...d}));});Object.keys(yearHerdData).forEach(k=>{if(Array.isArray(yearHerdData[k]))yearHerdData[k]=yearHerdData[k].map(a=>({...a}));});yearHerdData[activeYear()]=herd.map(a=>({...a}));yearSettings[activeYear()]={...getSettings()};loadStockInputs();Object.values(harvestData).flatMap(v=>Array.isArray(v)?v:[]).forEach(h=>nextHarvestId=Math.max(nextHarvestId,(Number(h.id)||0)+1));renderHerd();renderMonths();renderAll(false);renderHarvest();renderStock();renderYearClose();applyYearLock();
+</script>
+</body>
+</html>
